@@ -1,9 +1,9 @@
 import wpilib
-from subsystems.drivetrain import SwerveDrive
-from subsystems.shooter import Shooter
-from subsystems.arm import Arm
-from subsystems.photoelectric_sensor import PhotoelectricSensor
-from subsystems.vision import Vision
+from drivetrain import SwerveDrive
+# from subsystems.shooter import Shooter
+# from subsystems.arm import Arm
+# from subsystems.photoelectric_sensor import PhotoelectricSensor
+# from subsystems.vision import Vision
 
 class TheRinger(wpilib.TimedRobot):
     def robotInit(self):
@@ -12,10 +12,10 @@ class TheRinger(wpilib.TimedRobot):
 
         # Initialize components
         self.drivetrain = SwerveDrive()
-        self.shooter = Shooter(40, 41, 42, True, False, False)
-        self.arm = Arm(50, 51, True, False, 0, 0.16469017911725448)
-        self.photoelectric_sensor = PhotoelectricSensor(1)
-        self.vision = Vision()
+        # self.shooter = Shooter(40, 41, 42, True, False, False)
+        # self.arm = Arm(50, 51, True, False, 0, 0.16469017911725448)
+        # self.photoelectric_sensor = PhotoelectricSensor(1)
+        # self.vision = Vision()
 
         # Initialize controllers
         self.drivetrain_controller = wpilib.XboxController(0)
@@ -25,8 +25,8 @@ class TheRinger(wpilib.TimedRobot):
         self.timer = wpilib.Timer()
         self.drivetrain_timer = wpilib.Timer()
         self.drop_timer = wpilib.Timer()
-        self.prime_shooter_timer = wpilib.Timer()
-        self.shoot_timer = wpilib.Timer()        
+        # self.prime_shooter_timer = wpilib.Timer()
+        # self.shoot_timer = wpilib.Timer()        
         self.ready_robot_timer = wpilib.Timer()
         self.auto_timer = wpilib.Timer()
 
@@ -42,65 +42,65 @@ class TheRinger(wpilib.TimedRobot):
             self.location = 'side'
 
         # State of autonomous
-        self.autonomous_state = "None"
+        # self.autonomous_state = "None"
 
-    def autonomousInit(self):
-        # Reset timers
-        self.timer.restart()
-        self.drivetrain_timer.reset()
-        self.drop_timer.reset()
-        self.prime_shooter_timer.reset()
-        self.shoot_timer.reset()
-        self.ready_robot_timer.reset() 
-        self.auto_timer.reset()
+    # def autonomousInit(self):
+    #     # Reset timers
+    #     self.timer.restart()
+    #     self.drivetrain_timer.reset()
+    #     self.drop_timer.reset()
+    #     self.prime_shooter_timer.reset()
+    #     self.shoot_timer.reset()
+    #     self.ready_robot_timer.reset() 
+    #     self.auto_timer.reset()
 
-        # Reset robot speeds.
-        self.forward_speed = 0
-        self.strafe_speed = 0
-        self.rotation_speed = 0
+    #     # Reset robot speeds.
+    #     self.forward_speed = 0
+    #     self.strafe_speed = 0
+    #     self.rotation_speed = 0
 
-        # Location of robot
-        if wpilib.DriverStation.getLocation() == 2:
-            self.location = 'center'
-        elif wpilib.DriverStation.getLocation() == 1:
-            self.location = 'left'
-        elif wpilib.DriverStation.getLocation() == 3:
-            self.location = 'right'
+    #     # Location of robot
+    #     if wpilib.DriverStation.getLocation() == 2:
+    #         self.location = 'center'
+    #     elif wpilib.DriverStation.getLocation() == 1:
+    #         self.location = 'left'
+    #     elif wpilib.DriverStation.getLocation() == 3:
+    #         self.location = 'right'
 
-        # State of autonomous
-        self.autonomous_state = "Idle"
+    #     # State of autonomous
+    #     self.autonomous_state = "Idle"
 
-        # Reset Drivetrain
-        self.drivetrain.reset_drivetrain()
-        self.drivetrain.reset_gyro()
+    #     # Reset Drivetrain
+    #     self.drivetrain.reset_drivetrain()
+    #     self.drivetrain.reset_gyro()
             
-        # Reset shooter
-        self.shooter.reset()
+    #     # Reset shooter
+    #     self.shooter.reset()
 
-        # Reset Arm
-        self.arm.reset()
+    #     # Reset Arm
+    #     self.arm.reset()
 
-        # Reset Vision
-        self.vision.reset()
-        pass
+    #     # Reset Vision
+    #     self.vision.reset()
+    #     pass
 
-    def autonomousPeriodic(self):
-        match self.autonomous_state:
-            case "Idle":
-                self.autonomous_state = "Fire Note"
-            case "Fire Note":
-                distance, yaw = self.vision.get_data_to_speaker()
-                if distance != None and yaw != None:
-                    arm_angle, flywheel_speed = self.shooter.predict_speaker_shooting_state(distance)
-                    self.shooter.set_flywheel_motors(flywheel_speed)
-                    self.prime_shooter_timer.restart()
+    # def autonomousPeriodic(self):
+    #     match self.autonomous_state:
+    #         case "Idle":
+    #             self.autonomous_state = "Fire Note"
+    #         case "Fire Note":
+    #             distance, yaw = self.vision.get_data_to_speaker()
+    #             if distance != None and yaw != None:
+    #                 arm_angle, flywheel_speed = self.shooter.predict_speaker_shooting_state(distance)
+    #                 self.shooter.set_flywheel_motors(flywheel_speed)
+    #                 self.prime_shooter_timer.restart()
                     
-                    self.arm.set_speaker_shooting_position(arm_angle)
-                    self.ready_robot_timer.restart()
-                    self.autonomous_state = "Moving Arm"
-                else:
-                    self.shooter.set_flywheel_motors(0.8)
-                    self.prime_shooter_timer.restart()
+    #                 self.arm.set_speaker_shooting_position(arm_angle)
+    #                 self.ready_robot_timer.restart()
+    #                 self.autonomous_state = "Moving Arm"
+    #             else:
+    #                 self.shooter.set_flywheel_motors(0.8)
+    #                 self.prime_shooter_timer.restart()
                     
         #             self.arm.set_speaker_shooting_position(-12.5)
         #             self.ready_robot_timer.restart()
