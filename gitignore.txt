@@ -1,0 +1,8 @@
+__pycache__
+/autonomous/__pycache__
+/photonlibpy/__pycache__
+/subsystems/__pycache__
+/tests/__pycache__
+/tests/.pytest_cache
+/tests/ctre_sim
+*.wpilog
