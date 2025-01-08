@@ -33,11 +33,6 @@ class SwerveDrive():
         self.max_drivetrain_speed = 0.25
         self.drivers_tab_speed = Shuffleboard.getTab("Drivers").add(f"Max Swerve Drive Speed", self.max_drivetrain_speed).withSize(2, 2).getEntry()
 
-        # Pid Controller for Aligning to Speaker
-        self.align_to_speaker_controller = PIDController(1/20, 0, 0)
-        self.align_to_speaker_controller.enableContinuousInput(-180, 180)
-        self.align_to_speaker_controller.setTolerance(2)
-
         # Drivetrain state
         self.drivetrain_state = "Disabled"
         self.drivers_tab_state = Shuffleboard.getTab("Drivers").add(f"Swerve Drive State", self.drivetrain_state).withSize(2, 2).getEntry()
@@ -78,25 +73,6 @@ class SwerveDrive():
         Get the drivetrain's state.
         """
         return self.drivetrain_state
-    
-    def set_align_to_speaker_controller(self, angle):
-        """
-        Sets the Align to Speaker PID Controller at a certain angle.
-        """
-        self.align_to_speaker_controller.setSetpoint(angle)
-
-    def reached_align_to_speaker_goal(self):
-        return self.align_to_speaker_controller.atSetpoint()
-    
-    def update_align_to_speaker_controller(self):
-        rotation_speed = self.align_to_speaker_controller.calculate(self.get_current_robot_angle())
-        if rotation_speed > 1:
-            rotation_speed = 1
-        elif rotation_speed < -1:
-            rotation_speed = -1
-            
-        self.change_max_drivetrain_speed(0.25)
-        self.move_robot(0, 0, rotation_speed)
 
     def get_current_robot_angle(self):
         """

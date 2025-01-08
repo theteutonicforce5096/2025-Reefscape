@@ -1,7 +1,7 @@
 import wpilib
 from subsystems.drivetrain import SwerveDrive
 
-class TheRinger(wpilib.TimedRobot):
+class ReefscapeRobot(wpilib.TimedRobot):
     def robotInit(self):
         # Set brownout voltage
         wpilib.RobotController.setBrownoutVoltage(6.3)
@@ -21,12 +21,6 @@ class TheRinger(wpilib.TimedRobot):
         self.forward_speed = 0
         self.strafe_speed = 0
         self.rotation_speed = 0
-        
-        # Location of robot
-        if wpilib.DriverStation.getLocation() == 2:
-            self.location = 'center'
-        else:
-            self.location = 'side'
 
     def teleopInit(self):
         # Reset timers
@@ -111,4 +105,4 @@ class TheRinger(wpilib.TimedRobot):
         self.drivetrain_controller.setRumble(wpilib.XboxController.RumbleType.kBothRumble, 0)  
 
 if __name__ == "__main__":
-    wpilib.run(TheRinger)
+    wpilib.run(ReefscapeRobot)
