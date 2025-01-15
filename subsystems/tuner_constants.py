@@ -216,20 +216,20 @@ class TunerConstants:
         _back_right_encoder_inverted,
     )
 
-    def create_drivetrain(self):
+    @classmethod
+    def create_drivetrain(clazz) -> SwerveDrive:
         """
         Creates an instance of SwerveDrive from constants.
         """
-
         return SwerveDrive(
             hardware.TalonFX,
             hardware.TalonFX,
             hardware.CANcoder,
-            self.drivetrain_constants,
+            clazz.drivetrain_constants,
             [
-                self.front_left,
-                self.front_right,
-                self.back_left,
-                self.back_right,
+                clazz.front_left,
+                clazz.front_right,
+                clazz.back_left,
+                clazz.back_right,
             ],
         )

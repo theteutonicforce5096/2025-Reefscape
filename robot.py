@@ -1,7 +1,7 @@
 import commands2
 from robot_container import RobotContainer
 
-class Reefscape2025(commands2.TimedCommandRobot):
+class ReefscapeRobot(commands2.TimedCommandRobot):
     """
     Robot for Team 5096.
     """
