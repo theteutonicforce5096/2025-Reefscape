@@ -1,5 +1,6 @@
 import wpilib
 from subsystems.drivetrain import SwerveDrive
+from subsystems.vision import robot_camera
 
 class ReefscapeRobot(wpilib.TimedRobot):
     def robotInit(self):
@@ -23,6 +24,8 @@ class ReefscapeRobot(wpilib.TimedRobot):
         self.rotation_speed = 0
 
     def teleopInit(self):
+        self.limelight = robot_camera()
+
         # Reset timers
         self.timer.restart()
         self.drivetrain_timer.reset()
@@ -37,6 +40,7 @@ class ReefscapeRobot(wpilib.TimedRobot):
         self.drivetrain.reset_gyro()
 
     def teleopPeriodic(self):
+        self.limelight.run()
         # Get speeds from drivetrain controller.
         forward_speed = self.drivetrain_controller.getLeftY()
         strafe_speed = self.drivetrain_controller.getLeftX()
@@ -101,6 +105,7 @@ class ReefscapeRobot(wpilib.TimedRobot):
                     self.drivetrain_controller.setRumble(wpilib.XboxController.RumbleType.kBothRumble, 0)
 
     def teleopExit(self):
+        self.limelight.end()
         # Turn off drivetrain controller rumble if it is stil on.
         self.drivetrain_controller.setRumble(wpilib.XboxController.RumbleType.kBothRumble, 0)  
 
