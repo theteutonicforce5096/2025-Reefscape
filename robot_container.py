@@ -4,70 +4,92 @@ import commands2.cmd
 from commands2.sysid import SysIdRoutine
 
 from subsystems.tuner_constants import TunerConstants
-from telemetry import Telemetry
-
 from phoenix6 import swerve
+
+from telemetry import Telemetry
+from wpilib import DriverStation
+
 from wpimath.units import rotationsToRadians
+from wpimath.geometry import Rotation2d, Pose2d
 
 class RobotContainer:
     def __init__(self):
-        # Desired top speed at 12 volts
-        self._max_speed = TunerConstants.speed_at_12_volts 
+        # Initialize hardware
+        self.drivetrain = TunerConstants.create_drivetrain()
 
-        # Max angular velocity in rotations per second 
-        self._max_angular_rate = rotationsToRadians(1)
+        # Initialize controller
+        self.controller = commands2.button.CommandXboxController(0)
 
-        # Setting up bindings for controlling swerve drivezww
-        self._drive = (
+        # Initialize logger
+        self.logger = Telemetry()
+    
+        # Custom variables
+        self.max_speed = TunerConstants.speed_at_12_volts # Desired top speed at 12 volts
+        self.max_angular_rate = rotationsToRadians(1) # Max angular velocity in rotations per second 
+
+        # Setting up bindings for controlling swerve drive
+        self.drive = (
             swerve.requests.FieldCentric()
-            .with_deadband(self._max_speed * 0.1)
-            .with_rotational_deadband(self._max_angular_rate * 0.1)
+            .with_deadband(self.max_speed * 0.1)
+            .with_rotational_deadband(self.max_angular_rate * 0.1)
             .with_drive_request_type(swerve.SwerveModule.DriveRequestType.VELOCITY)
             .with_steer_request_type(swerve.SwerveModule.SteerRequestType.MOTION_MAGIC_EXPO)
             .with_desaturate_wheel_speeds(True)
             .with_forward_perspective(swerve.requests.ForwardPerspectiveValue.OPERATOR_PERSPECTIVE)
         )
 
-        self._logger = Telemetry()
-
-        self._controller = commands2.button.CommandXboxController(0)
-
-        self._drivetrain = TunerConstants.create_drivetrain()
-
     def configure_button_bindings_teleop(self):
-        self._drivetrain.register_telemetry(lambda state: self._logger.telemeterize(state))
+        # Register telemetry
+        self.drivetrain.register_telemetry(lambda state: self.logger.telemeterize(state))
+        
+        # Set forward perspective for field oriented drive
+        alliance_color = DriverStation.getAlliance()
+        if alliance_color is not None:
+            if alliance_color == DriverStation.Alliance.kBlue:
+                # Blue alliance sees forward as 0 degrees (toward red alliance wall)
+                self.drivetrain.set_operator_perspective_forward(Rotation2d.fromDegrees(0))
+            else:
+                # Red alliance sees forward as 180 degrees (toward blue alliance wall)
+                self.drivetrain.set_operator_perspective_forward(Rotation2d.fromDegrees(180))  
 
-        self._drivetrain.setDefaultCommand(
-            self._drivetrain.apply_request(
+        # Set initial pose for robot
+        # Should be done in autonomous by PathPlanner for Competition
+        # 5 meters right, 5 meters up, 0 radians rotation relative to blue alliance
+        # where origin is at the bottom left of blue alliance
+        self.drivetrain.reset_pose(Pose2d(5, 5, 0))
+
+        # Set default command for drivetrain
+        self.drivetrain.setDefaultCommand(
+            self.drivetrain.apply_request(
                 lambda: (
-                    self._drive.with_velocity_x(
-                        self._controller.getLeftY() * self._max_speed
+                    self.drive.with_velocity_x(
+                        self.controller.getLeftY() * self.max_speed
                     )
                     .with_velocity_y(
-                        self._controller.getLeftX() * self._max_speed
+                        self.controller.getLeftX() * self.max_speed
                     )
                     .with_rotational_rate(
-                        self._controller.getRightX() * self._max_angular_rate
+                        self.controller.getRightX() * self.max_angular_rate
                     )
                 )
             )
         )
 
-        # Reset the field centric heading using left bumper, right bumper, and a button.
-        (self._controller.leftBumper() & self._controller.rightBumper() & self._controller.a()).onTrue(
+        # Reset the field centric heading using left bumper, right bumper, and A button.
+        (self.controller.leftBumper() & self.controller.rightBumper() & self.controller.a()).onTrue(
             self.drivetrain.runOnce(lambda: self.drivetrain.seed_field_centric()))
     
     def configure_button_bindings_test(self):
         # Note that each routine should be run exactly once in a single log.
-        (self._controller.leftTrigger() & self._controller.leftBumper()).whileTrue(
+        (self.controller.leftTrigger() & self.controller.leftBumper()).whileTrue(
             self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kForward)
         )
-        (self._controller.leftTrigger() & self._controller.rightBumper()).whileTrue(
+        (self.controller.leftTrigger() & self.controller.rightBumper()).whileTrue(
             self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kReverse)
         )
-        (self._controller.rightTrigger() & self._controller.leftBumper()).whileTrue(
+        (self.controller.rightTrigger() & self.controller.leftBumper()).whileTrue(
             self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kForward)
         )
-        (self._controller.rightTrigger() & self._controller.rightBumper()).whileTrue(
+        (self.controller.rightTrigger() & self.controller.rightBumper()).whileTrue(
             self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kReverse)
         )

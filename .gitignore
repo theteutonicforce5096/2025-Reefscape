@@ -2,3 +2,4 @@ __pycache__/
 .DS_Store
 .pytest_cache/
 /*/__pycache__/
+/tests/ctre_sim/
