@@ -8,5 +8,5 @@ class RobotContainer():
         self.motor = Motor(0)
 
     def config_button_bindings_teleop(self):
-        self.motor.setDefaultCommand(lambda: self.motor.set_speed(0))
+        (self.controller.rightBumper() & self.controller.leftBumper()).onFalse(self.motor.runOnce(lambda: self.motor.set_speed(0)))
         (self.controller.rightBumper() & self.controller.leftBumper()).onTrue(self.motor.runOnce(lambda: self.motor.set_speed(0.1)))
