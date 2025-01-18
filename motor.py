@@ -1,7 +1,10 @@
 from commands2 import Subsystem
 import phoenix6
 
-class motor(Subsystem):
-    def __init__(self):
+class Motor(Subsystem):
+    def __init__(self, id):
         Subsystem.__init__(self)
-        phoenix6.CANBus.get_status()
+        self.motor = phoenix6.hardware.TalonFX(id)
+
+    def set_speed(self, percent):
+        self.motor.set_control(phoenix6.controls.DutyCycleOut(percent))

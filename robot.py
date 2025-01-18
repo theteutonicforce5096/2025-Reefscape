@@ -1,5 +1,3 @@
-# TODO: insert robot code here
-
 import commands2
 from robot_container import RobotContainer
 
