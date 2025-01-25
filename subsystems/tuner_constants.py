@@ -15,28 +15,26 @@ class TunerConstants:
     # output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
     _steer_gains = (
         configs.Slot0Configs()
-        .with_k_p(100)
+        .with_k_p(75)
         .with_k_i(0)
-        .with_k_d(0.5)
-        .with_k_s(0.1)
-        .with_k_v(1.5)
-        .with_k_a(0)
-        .with_static_feedforward_sign(signals.StaticFeedforwardSignValue.USE_CLOSED_LOOP_SIGN)
+        .with_k_d(0)
     )
+
     # When using closed-loop control, the drive motor uses the control
     # output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     _drive_gains = (
-        configs.Slot0Configs()
-        .with_k_p(0.1)
+        configs.Slot0Configs() 
+        .with_k_s(0)
+        .with_k_v(0)
+        .with_k_p(0)
         .with_k_i(0)
         .with_k_d(0)
-        .with_k_s(0)
-        .with_k_v(0.124)
     )
 
     # The closed-loop output type to use for the steer motors;
     # This affects the PID/FF gains for the steer motors
     _steer_closed_loop_output = swerve.ClosedLoopOutputType.VOLTAGE
+
     # The closed-loop output type to use for the drive motors;
     # This affects the PID/FF gains for the drive motors
     _drive_closed_loop_output = swerve.ClosedLoopOutputType.VOLTAGE
@@ -57,6 +55,7 @@ class TunerConstants:
     # Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     # Some configs will be overwritten; check the `with_*_initial_configs()` API documentation.
     _drive_initial_configs = configs.TalonFXConfiguration()
+    
     _steer_initial_configs = configs.TalonFXConfiguration().with_current_limits(
         configs.CurrentLimitsConfigs()
         # Swerve azimuth does not require much torque output, so we can set a relatively low
@@ -77,7 +76,7 @@ class TunerConstants:
 
     # Every 1 rotation of the azimuth results in _couple_ratio drive motor turns;
     # This may need to be tuned to your individual robot
-    _couple_ratio = 5.4
+    _couple_ratio = 0.0
 
     _drive_gear_ratio = 5.67
     _steer_gear_ratio = 12.1
@@ -86,14 +85,7 @@ class TunerConstants:
     _invert_left_side = False
     _invert_right_side = True
 
-    _pigeon_id = 1
-
-    # These are only used for simulation
-    _steer_inertia: units.kilogram_square_meter = 0.01
-    _drive_inertia: units.kilogram_square_meter = 0.01
-    # Simulated voltage necessary to overcome friction
-    _steer_friction_voltage: units.volt = 0.2
-    _drive_friction_voltage: units.volt = 0.2
+    _pigeon_id = 30
 
     drivetrain_constants = (
         swerve.SwerveDrivetrainConstants()
@@ -120,10 +112,6 @@ class TunerConstants:
         .with_drive_motor_initial_configs(_drive_initial_configs)
         .with_steer_motor_initial_configs(_steer_initial_configs)
         .with_encoder_initial_configs(_encoder_initial_configs)
-        .with_steer_inertia(_steer_inertia)
-        .with_drive_inertia(_drive_inertia)
-        .with_steer_friction_voltage(_steer_friction_voltage)
-        .with_drive_friction_voltage(_drive_friction_voltage)
     )
 
 

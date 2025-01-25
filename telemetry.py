@@ -1,5 +1,4 @@
 from ntcore import NetworkTableInstance
-from wpilib import Field2d
 from phoenix6 import swerve
 
 class Telemetry:

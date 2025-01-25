@@ -29,18 +29,19 @@ class RobotContainer:
 
         # Setting up bindings for controlling swerve drive
         self.drive = (
-            swerve.requests.FieldCentric()
-            .with_deadband(self.max_speed * 0.1)
-            .with_rotational_deadband(self.max_angular_rate * 0.1)
+            swerve.requests.RobotCentric()
+            .with_deadband(self.max_speed * 0.01)
+            .with_rotational_deadband(self.max_angular_rate * 0.01)
             .with_drive_request_type(swerve.SwerveModule.DriveRequestType.VELOCITY)
-            .with_steer_request_type(swerve.SwerveModule.SteerRequestType.MOTION_MAGIC_EXPO)
+            .with_steer_request_type(swerve.SwerveModule.SteerRequestType.POSITION)
             .with_desaturate_wheel_speeds(True)
-            .with_forward_perspective(swerve.requests.ForwardPerspectiveValue.OPERATOR_PERSPECTIVE)
+            #.with_forward_perspective(swerve.requests.ForwardPerspectiveValue.OPERATOR_PERSPECTIVE)
         )
 
     def configure_button_bindings_teleop(self):
         # Register telemetry
-        #self.drivetrain.register_telemetry(lambda state: self.logger.telemeterize(state))
+        self.drivetrain.OdometryThread(0).start()
+        self.drivetrain.register_telemetry(lambda state: self.logger.telemeterize(state))
         
         # Set forward perspective for field oriented drive
         alliance_color = DriverStation.getAlliance()
@@ -57,6 +58,7 @@ class RobotContainer:
         # 5 meters right, 5 meters up, 0 radians rotation relative to blue alliance
         # where origin is at the bottom left of blue alliance
         self.drivetrain.reset_pose(Pose2d(5, 5, 0))
+
 
         # Set default command for drivetrain
         self.drivetrain.setDefaultCommand(
