@@ -40,7 +40,7 @@ class RobotContainer:
 
     def configure_button_bindings_teleop(self):
         # Register telemetry
-        self.drivetrain.register_telemetry(lambda state: self.logger.telemeterize(state))
+        #self.drivetrain.register_telemetry(lambda state: self.logger.telemeterize(state))
         
         # Set forward perspective for field oriented drive
         alliance_color = DriverStation.getAlliance()
@@ -63,13 +63,13 @@ class RobotContainer:
             self.drivetrain.apply_request(
                 lambda: (
                     self.drive.with_velocity_x(
-                        self.controller.getLeftY() * self.max_speed
+                        (self.controller.getLeftY() ** 2) * self.max_speed
                     )
                     .with_velocity_y(
-                        self.controller.getLeftX() * self.max_speed
+                        (self.controller.getLeftX() ** 2) * self.max_speed
                     )
                     .with_rotational_rate(
-                        self.controller.getRightX() * self.max_angular_rate
+                        (self.controller.getRightX() ** 2) * self.max_angular_rate
                     )
                 )
             )
