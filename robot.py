@@ -13,7 +13,6 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         commands2.CommandScheduler.getInstance().run()
 
     def teleopInit(self):
-        # Cancels all running commands at the start of test mode
         commands2.CommandScheduler.getInstance().cancelAll()
         self.container.configure_button_bindings_teleop()
 
@@ -24,7 +23,6 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         commands2.CommandScheduler.getInstance().cancelAll()
 
     def testInit(self):
-        # Cancels all running commands at the start of test mode
         commands2.CommandScheduler.getInstance().cancelAll()
         self.container.configure_button_bindings_test()
 

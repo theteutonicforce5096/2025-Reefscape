@@ -3,6 +3,8 @@ from commands2.sysid import SysIdRoutine
 from math import pi
 from phoenix6 import SignalLogger, swerve
 from wpilib.sysid import SysIdRoutineLog
+from wpilib import DriverStation
+from wpimath.geometry import Rotation2d, Pose2d
 
 class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
     """
@@ -82,7 +84,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         # SysId routine to test
         self._sys_id_routine_to_apply = self._sys_id_routine_translation
 
-    def apply_request( self, request ):
+    def apply_request(self, request):
         """
         Returns a command that applies the specified control request to this swerve drivetrain.
 
@@ -92,6 +94,19 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         :rtype: Command
         """
         return self.run(lambda: self.set_control(request()))
+    
+    def set_forward_perspective(self):
+        """
+        Set forward perspective of the robot for field oriented drive.
+        """
+        alliance_color = DriverStation.getAlliance()
+        if alliance_color is not None:
+            if alliance_color == DriverStation.Alliance.kBlue:
+                # Blue alliance sees forward as 0 degrees (toward red alliance wall)
+                self.set_operator_perspective_forward(Rotation2d.fromDegrees(0))
+            else:
+                # Red alliance sees forward as 180 degrees (toward blue alliance wall)
+                self.set_operator_perspective_forward(Rotation2d.fromDegrees(180))  
 
     def sys_id_quasistatic(self, direction):
         """
