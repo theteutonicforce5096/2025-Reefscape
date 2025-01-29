@@ -1,5 +1,6 @@
 from commands2 import Subsystem
 from commands2.sysid import SysIdRoutine
+from wpilib.sysid import SysIdRoutineLog
 
 from phoenix6 import SignalLogger, swerve
 
@@ -9,8 +10,6 @@ from wpilib import SendableChooser
 
 from math import pi
 from wpimath.geometry import Rotation2d
-from wpimath.units import rotationsToRadians
-from wpimath.filter import SlewRateLimiter
 
 from wpilib import Field2d
 
@@ -47,30 +46,6 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         # Create Field2d Widget in Shuffleboard
         self.field = Field2d()
         Shuffleboard.getTab("Drivers").add(f"Field", self.field).withSize(3, 3)
-        
-        # Register telemetry function for updating pose
-        self.register_telemetry(lambda state: self.update_pose(state))
-
-        # Max speeds
-        self.max_linear_speed = 5.63 # Max linear speed in meters per second
-        self.max_angular_rate = rotationsToRadians(2.43) # Max angular velocity in radians per second 
-
-        # Requests for controlling swerve drive
-        # https://www.chiefdelphi.com/t/motion-magic-velocity-control-for-drive-motors-in-phoenix6-swerve-drive-api/483669/6
-        self.drive = (
-            swerve.requests.FieldCentric()
-            .with_forward_perspective(swerve.requests.ForwardPerspectiveValue.OPERATOR_PERSPECTIVE)
-            .with_drive_request_type(swerve.SwerveModule.DriveRequestType.VELOCITY)
-            .with_steer_request_type(swerve.SwerveModule.SteerRequestType.POSITION)
-            .with_desaturate_wheel_speeds(True)
-        )
-
-        self.brake = swerve.requests.SwerveDriveBrake()
-
-        # Slew rate limiters for limiting robot acceleration
-        self.straight_speed_limiter = SlewRateLimiter(self.max_linear_speed, -self.max_linear_speed)
-        self.strafe_speed_limiter = SlewRateLimiter(self.max_linear_speed, -self.max_linear_speed)
-        self.rotation_speed_limiter = SlewRateLimiter(self.max_angular_rate, -self.max_angular_rate)
 
         # Swerve requests for SysId characterization
         self.translation_characterization = swerve.requests.SysIdSwerveTranslation()
@@ -81,7 +56,10 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         self.sys_id_routine_translation = SysIdRoutine(
             SysIdRoutine.Config(
                 rampRate = 1.0,
-                stepVoltage = 4.0
+                stepVoltage = 4.0,
+                recordState = lambda state: SignalLogger.write_string(
+                    "SysIdTranslation_State", SysIdRoutineLog.stateEnumToString(state)
+                )
             ),
             SysIdRoutine.Mechanism(
                 lambda output: self.set_control(self.translation_characterization.with_volts(output)),
@@ -95,6 +73,9 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
             SysIdRoutine.Config(
                 rampRate = 1.0,
                 stepVoltage = 7.0,
+                recordState = lambda state: SignalLogger.write_string(
+                    "SysIdSteer_State", SysIdRoutineLog.stateEnumToString(state)
+                )
             ),
             SysIdRoutine.Mechanism(
                 lambda output: self.set_control(self.steer_characterization.with_volts(output)),
@@ -103,65 +84,27 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
             ),
         )
 
-        # SysId routine for characterizing rotation. This is used for FieldCentricFacingAngle HeadingController.
-        self.sys_id_routine_rotation = SysIdRoutine(
-            SysIdRoutine.Config(
-                # This is in radians per second², but SysId only supports "volts per second"
-                rampRate = pi / 6,
-                stepVoltage = 7.0,
-            ),
-            SysIdRoutine.Mechanism(
-                # output is actually radians per second, but SysId only supports "volts"
-                lambda output: self.set_control(self.rotation_characterization.with_rotational_rate(output)),
-                lambda log: None,
-                self,
-            ),
-        )
-
         # SysId routine to test
         self.sys_id_routines = SendableChooser()
-        self.sys_id_routines.setDefaultOption("Translation Routine", self.sys_id_routine_translation)
-        self.sys_id_routines.addOption("Steer Routine", self.sys_id_routine_steer)
-        self.sys_id_routines.setDefaultOption("Rotation Routine", self.sys_id_routine_rotation)
+        self.sys_id_routines.setDefaultOption("Steer Routine", self.sys_id_routine_steer)
+        self.sys_id_routines.addOption("Translation Routine", self.sys_id_routine_translation)
 
         Shuffleboard.getTab("SysId").add(f"Routines", self.sys_id_routines).withSize(2, 2)
         self.sys_id_routine_to_apply = self.sys_id_routines.getSelected()
-    
-    def set_robot_speed(self, translation_deadband_percent, rotation_deadband_percent, left_y, left_x, right_x):
+
+    def periodic(self):
+        self.update_pose(self.get_state())
+
+    def apply_request(self, request):
         """
-        Set the speed of the robot from controller inputs.
+        Returns a command that applies the specified control request to this swerve drivetrain.
 
-        :param translation_deadband_percent: Translation deadband in percent of max linear speed
-        :type translation_deadband_percent: float
-        :param rotation_deadband_percent: Rotation deadband in percent of max angular speed 
-        :type rotation_deadband_percent: float
-        :param left_y: Y value of the left side of the controller
-        :type left_y: float
-        :param left_x: X value of the left side of the controller
-        :type left_x: float
-        :param right_x: X value of the right side of the controller
-        :type right_x: float
+        :param request: Lambda returning the request to apply
+        :type request: Callable[[], swerve.requests.SwerveRequest]
+        :returns: Command to run
+        :rtype: Command
         """
-
-        # Convert joystick inputs into robot speeds with slew rate limiter applied
-        straight_speed = self.straight_speed_limiter.calculate((left_y ** 2) * self.max_linear_speed)
-        strafe_speed = self.strafe_speed_limiter.calculate((left_x ** 2) * self.max_linear_speed)
-        rotation_speed = self.rotation_speed_limiter.calculate((right_x ** 2) * self.max_angular_rate)
-
-        translation_deadband = self.max_linear_speed * translation_deadband_percent
-        rotation_deadband =  self.max_angular_rate * rotation_deadband_percent
-
-        # Move robot if speeds are above deadband otherwise stop robot
-        if abs(straight_speed) >= translation_deadband or abs(strafe_speed) >= translation_deadband or abs(rotation_speed) >= rotation_deadband:
-            drivetrain_request = lambda: (
-                self.drive.with_velocity_x(straight_speed)
-                .with_velocity_y(strafe_speed)
-                .with_rotational_rate(rotation_speed)
-            )
-
-            return self.run(lambda: self.set_control(drivetrain_request()))
-        else:
-            self.run(lambda: self.set_control(self.brake()))
+        return self.run(lambda: self.set_control(request()))
     
     def set_forward_perspective(self):
         """

@@ -3,6 +3,11 @@ from commands2.sysid import SysIdRoutine
 
 from subsystems.swerve_drive_constants import SwerveDriveConstants
 
+from phoenix6 import swerve
+
+from wpimath.units import rotationsToRadians
+from wpimath.filter import SlewRateLimiter
+
 class RobotContainer:
     def __init__(self):
         # Initialize hardware
@@ -11,18 +16,52 @@ class RobotContainer:
         # Initialize controller
         self.controller = commands2.button.CommandXboxController(0)
 
+        # Max speeds
+        self.max_linear_speed = 5.63 # Max linear speed in meters per second
+        self.max_angular_rate = rotationsToRadians(2.43) # Max angular velocity in radians per second 
+
+        # Requests for controlling swerve drive
+        # https://www.chiefdelphi.com/t/motion-magic-velocity-control-for-drive-motors-in-phoenix6-swerve-drive-api/483669/6
+        self.drive = (
+            swerve.requests.RobotCentric()
+            #.with_forward_perspective(swerve.requests.ForwardPerspectiveValue.OPERATOR_PERSPECTIVE)
+            .with_drive_request_type(swerve.SwerveModule.DriveRequestType.VELOCITY)
+            .with_steer_request_type(swerve.SwerveModule.SteerRequestType.POSITION)
+            .with_deadband(self.max_linear_speed * 0.01)
+            .with_rotational_deadband(self.max_angular_rate * 0.01)
+            .with_desaturate_wheel_speeds(True)
+        )
+
+        # Slew rate limiters for limiting robot acceleration
+        self.straight_speed_limiter = SlewRateLimiter(self.max_linear_speed * 2, -self.max_linear_speed * 2)
+        self.strafe_speed_limiter = SlewRateLimiter(self.max_linear_speed * 2, -self.max_linear_speed * 2)
+        self.rotation_speed_limiter = SlewRateLimiter(self.max_angular_rate * 2, -self.max_angular_rate * 2)
+
     def configure_button_bindings_teleop(self):
         # Set the forward perspective of the robot for field oriented driving
         self.drivetrain.set_forward_perspective()
 
         # Set default command for drivetrain
         self.drivetrain.setDefaultCommand(
-            self.drivetrain.set_robot_speed(
-                0.01, 
-                0.01,
-                self.controller.getLeftY(),
-                self.controller.getLeftX(),
-                self.controller.getRightX()
+            # Drivetrain will execute this command periodically
+            self.drivetrain.apply_request(
+                lambda: (
+                    self.drive.with_velocity_x(
+                        self.straight_speed_limiter.calculate(
+                            (self.controller.getLeftY() ** 2) * self.max_linear_speed
+                        )
+                    ) 
+                    .with_velocity_y(
+                        self.strafe_speed_limiter.calculate(
+                            (-self.controller.getLeftX() ** 2) * self.max_linear_speed
+                        )
+                    )
+                    .with_rotational_rate(
+                        self.rotation_speed_limiter.calculate(
+                            (-self.controller.getRightX() ** 2) * self.max_angular_rate
+                        )
+                    )
+                )
             )
         )
         
