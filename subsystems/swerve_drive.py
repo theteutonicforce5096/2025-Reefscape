@@ -18,11 +18,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
 
     def __init__(self, drive_motor_type, steer_motor_type, encoder_type, drivetrain_constants, modules):
         """
-        Constructs a swerve drivetrain using the specified constants.
-
-        This constructs the underlying hardware devices, so users should not construct
-        the devices themselves. If they need the devices, they can access them through
-        getters in the classes.
+        Constructs for initializing swerve drivetrain using the specified constants.
 
         :param drive_motor_type: Type of the drive motor
         :type drive_motor_type: type
@@ -85,8 +81,8 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
 
         # SysId routine to test
         self.sys_id_routines = SendableChooser()
-        self.sys_id_routines.setDefaultOption("Translation Routine", self.sys_id_routine_translation)
-        self.sys_id_routines.addOption("Steer Routine", self.sys_id_routine_steer)
+        self.sys_id_routines.setDefaultOption("Steer Routine", self.sys_id_routine_steer)
+        self.sys_id_routines.addOption("Translation Routine", self.sys_id_routine_translation)
 
         Shuffleboard.getTab("SysId").add(f"Routines", self.sys_id_routines).withSize(2, 2)
         self.sys_id_routine_to_apply = self.sys_id_routines.getSelected()
@@ -98,6 +94,8 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
 
         # Update pose in Field 2d Widget
         self.update_pose_field2d(self.get_state())
+
+
 
     def apply_request(self, request):
         """

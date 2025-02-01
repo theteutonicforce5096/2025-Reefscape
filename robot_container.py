@@ -8,6 +8,8 @@ from phoenix6 import swerve, SignalLogger
 from wpimath.units import rotationsToRadians
 from wpimath.filter import SlewRateLimiter
 
+from math import copysign
+
 class RobotContainer:
     def __init__(self):
         # Initialize hardware
@@ -23,10 +25,10 @@ class RobotContainer:
         # Requests for controlling swerve drive
         # https://www.chiefdelphi.com/t/motion-magic-velocity-control-for-drive-motors-in-phoenix6-swerve-drive-api/483669/6
         self.drive = (
-            swerve.requests.RobotCentric()
-            #.with_forward_perspective(swerve.requests.ForwardPerspectiveValue.OPERATOR_PERSPECTIVE)
+            swerve.requests.FieldCentric()
+            .with_forward_perspective(swerve.requests.ForwardPerspectiveValue.OPERATOR_PERSPECTIVE)
             .with_drive_request_type(swerve.SwerveModule.DriveRequestType.VELOCITY)
-            .with_steer_request_type(swerve.SwerveModule.SteerRequestType.POSITION)
+            .with_steer_request_type(swerve.SwerveModule.SteerRequestType.MOTION_MAGIC_EXPO)
             .with_deadband(self.max_linear_speed * 0.01)
             .with_rotational_deadband(self.max_angular_rate * 0.01)
             .with_desaturate_wheel_speeds(True)
@@ -41,6 +43,10 @@ class RobotContainer:
         # Set the forward perspective of the robot for field oriented driving
         self.drivetrain.set_forward_perspective()
 
+        self.drivetrain.tare_everything()
+
+        limit_direction = lambda x: min(x, 0.20) if x >= 0 else max(x, -0.20)
+
         # Set default command for drivetrain
         self.drivetrain.setDefaultCommand(
             # Drivetrain will execute this command periodically
@@ -48,17 +54,23 @@ class RobotContainer:
                 lambda: (
                     self.drive.with_velocity_x(
                         self.straight_speed_limiter.calculate(
-                            (self.controller.getLeftY() ** 2) * self.max_linear_speed
+                            (limit_direction(
+                                -(self.controller.getLeftY() * abs(self.controller.getLeftY()))
+                            ) * self.max_linear_speed)
                         )
                     ) 
                     .with_velocity_y(
                         self.strafe_speed_limiter.calculate(
-                            (-self.controller.getLeftX() ** 2) * self.max_linear_speed
+                            (limit_direction(
+                                -(self.controller.getLeftX() * abs(self.controller.getLeftX()))
+                            ) * self.max_linear_speed)
                         )
                     )
                     .with_rotational_rate(
                         self.rotation_speed_limiter.calculate(
-                            (-self.controller.getRightX() ** 2) * self.max_angular_rate
+                            (limit_direction(
+                                -(self.controller.getRightX() * abs(self.controller.getRightX()))
+                            ) * self.max_angular_rate)
                         )
                     )
                 )

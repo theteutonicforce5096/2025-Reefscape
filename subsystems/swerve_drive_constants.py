@@ -13,9 +13,12 @@ class SwerveDriveConstants:
     # Position Control
     _steer_gains = (
         configs.Slot0Configs()
-        .with_k_p(100)
+        .with_k_s(0.2)
+        #.with_k_v(1)
+        .with_k_p(75) # 60
         .with_k_i(0)
-        .with_k_d(0)
+        .with_k_d(1) # 3
+        .with_static_feedforward_sign(signals.StaticFeedforwardSignValue.USE_CLOSED_LOOP_SIGN)
     )
 
     # When using closed-loop control, the drive motor uses the control
@@ -23,8 +26,9 @@ class SwerveDriveConstants:
     _drive_gains = (
         configs.Slot0Configs() 
         .with_k_s(0)
-        .with_k_a(0.39179)
-        .with_k_p(0.76675)
+        .with_k_a(0)
+        .with_k_v(0.124)
+        .with_k_p(0.1)
         .with_k_i(0)
         .with_k_d(0)
     )
@@ -56,11 +60,11 @@ class SwerveDriveConstants:
     # The closed-loop output type to use for the steer motors;
     # This affects the PID/FF gains for the steer motors
     # https://www.chiefdelphi.com/t/motion-magic-velocity-control-for-drive-motors-in-phoenix6-swerve-drive-api/483669/6
-    _steer_closed_loop_output = swerve.ClosedLoopOutputType.TORQUE_CURRENT_FOC
+    _steer_closed_loop_output = swerve.ClosedLoopOutputType.VOLTAGE
 
     # The closed-loop output type to use for the drive motors;
     # This affects the PID/FF gains for the drive motors
-    _drive_closed_loop_output = swerve.ClosedLoopOutputType.TORQUE_CURRENT_FOC
+    _drive_closed_loop_output = swerve.ClosedLoopOutputType.VOLTAGE
 
     # The type of motor used for the drive motor
     _drive_motor_type = swerve.DriveMotorArrangement.TALON_FX_INTEGRATED
