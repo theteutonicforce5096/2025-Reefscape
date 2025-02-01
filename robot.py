@@ -38,8 +38,7 @@ class ReefscapeRobot(wpilib.TimedRobot):
         self.timer.restart()
         # self.drivetrain_timer.reset()
         
-        #calling LEDs
-        self.lights.LED_TF()
+        
 
         # Calling to set the alliance color 
         alliance = wpilib.DriverStation.getAlliance()
@@ -123,21 +122,28 @@ class ReefscapeRobot(wpilib.TimedRobot):
                 # else:
                 #     self.drivetrain_controller.setRumble(wpilib.XboxController.RumbleType.kBothRumble, 0)
         
-        #
+        # Coral Pickup
         if self.pxn_fightstick.getRawButtonPressed(3):
-            self.lights.LED_CP()
-            
-       
-        
-        if self.pxn_fightstick.getRawButtonPressed(4):
-            self.lights.LED_AP()
-        
-        
+            self.lights.LED_CP(True)
+        # Algae Pickup
+        # if self.pxn_fightstick.getRawButtonPressed(4):
+        #     self.lights.LED_AP(True)
+        # Going Back to Alliance Color
         if self.pxn_fightstick.getRawButtonPressed(2):
-            self.pxn_fightstick.getRawButtonPressed(3) == False
-            self.pxn_fightstick.getRawButtonPressed(4) == False
-            #self.lights.GETOUT()        
-    
+            self.lights.LED_CP(False)
+            # self.lights.LED_AP(False)
+        # Hanging Animation            
+        if self.pxn_fightstick.getRawButtonPressed(1):
+            self.lights.LED_hang(True)
+        #Arm Angle 1
+        if self.pxn_fightstick.getRawButtonPressed(5):
+            self.lights.LED_AA1(True)
+        #Arm Angle 2
+        if self.pxn_fightstick.getRawButtonPressed(6):
+            self.lights.LED_AA2(True)
+        #Arm Angle 3
+        if self.pxn_fightstick.getRawButtonPressed(7):
+            self.lights.LED_AA3(True)
     
     def teleopExit(self):
         # Turn off drivetrain controller rumble if it is stil on.
