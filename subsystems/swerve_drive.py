@@ -3,6 +3,7 @@ from commands2.sysid import SysIdRoutine
 from wpilib.sysid import SysIdRoutineLog
 
 from phoenix6 import swerve, SignalLogger
+from subsystems.sys_id_swerve_requests import SysIdSwerveTranslation, SysIdSwerveSteerGains
 
 from wpilib import DriverStation, Field2d, SendableChooser
 from wpilib.shuffleboard import Shuffleboard
@@ -45,8 +46,8 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         Shuffleboard.getTab("Drivers").add(f"Field", self.field).withSize(3, 3)
 
         # Swerve requests for SysId characterization
-        self.translation_characterization = swerve.requests.SysIdSwerveTranslation()
-        self.steer_characterization = swerve.requests.SysIdSwerveSteerGains()
+        self.translation_characterization = SysIdSwerveTranslation()
+        self.steer_characterization = SysIdSwerveSteerGains()
 
         # SysId routine for characterizing drive.
         self.sys_id_routine_translation = SysIdRoutine(
@@ -59,7 +60,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
                 )
             ),
             SysIdRoutine.Mechanism(
-                lambda output: self.set_control(self.translation_characterization.with_volts(output)),
+                lambda output: self.set_control(self.translation_characterization.with_amps(output)),
                 lambda log: None,
                 self,
             ),
@@ -76,7 +77,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
                 )
             ),
             SysIdRoutine.Mechanism(
-                lambda output: self.set_control(self.steer_characterization.with_volts(output)),
+                lambda output: self.set_control(self.steer_characterization.with_amps(output)),
                 lambda log: None,
                 self,
             ),
@@ -84,8 +85,8 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
 
         # SysId routine to test
         self.sys_id_routines = SendableChooser()
-        self.sys_id_routines.setDefaultOption("Steer Routine", self.sys_id_routine_steer)
-        self.sys_id_routines.addOption("Translation Routine", self.sys_id_routine_translation)
+        self.sys_id_routines.setDefaultOption("Translation Routine", self.sys_id_routine_translation)
+        self.sys_id_routines.addOption("Steer Routine", self.sys_id_routine_steer)
 
         Shuffleboard.getTab("SysId").add(f"Routines", self.sys_id_routines).withSize(2, 2)
         self.sys_id_routine_to_apply = self.sys_id_routines.getSelected()

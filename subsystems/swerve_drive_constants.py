@@ -13,7 +13,7 @@ class SwerveDriveConstants:
     # Position Control
     _steer_gains = (
         configs.Slot0Configs()
-        .with_k_p(75)
+        .with_k_p(100)
         .with_k_i(0)
         .with_k_d(0)
     )
@@ -23,8 +23,8 @@ class SwerveDriveConstants:
     _drive_gains = (
         configs.Slot0Configs() 
         .with_k_s(0)
-        .with_k_v(0.12)
-        .with_k_p(0.1)
+        .with_k_a(0.39179)
+        .with_k_p(0.76675)
         .with_k_i(0)
         .with_k_d(0)
     )
