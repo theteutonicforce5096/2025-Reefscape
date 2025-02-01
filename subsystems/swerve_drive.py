@@ -2,16 +2,13 @@ from commands2 import Subsystem
 from commands2.sysid import SysIdRoutine
 from wpilib.sysid import SysIdRoutineLog
 
-from phoenix6 import SignalLogger, swerve
+from phoenix6 import swerve, SignalLogger
 
-from wpilib import DriverStation
+from wpilib import DriverStation, Field2d, SendableChooser
 from wpilib.shuffleboard import Shuffleboard
-from wpilib import SendableChooser
 
 from math import pi
 from wpimath.geometry import Rotation2d
-
-from wpilib import Field2d
 
 class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
     """
@@ -50,15 +47,15 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         # Swerve requests for SysId characterization
         self.translation_characterization = swerve.requests.SysIdSwerveTranslation()
         self.steer_characterization = swerve.requests.SysIdSwerveSteerGains()
-        self.rotation_characterization = swerve.requests.SysIdSwerveRotation()
 
         # SysId routine for characterizing drive.
         self.sys_id_routine_translation = SysIdRoutine(
             SysIdRoutine.Config(
                 rampRate = 1.0,
                 stepVoltage = 4.0,
+                timeout = 5.0,
                 recordState = lambda state: SignalLogger.write_string(
-                    "SysIdTranslation_State", SysIdRoutineLog.stateEnumToString(state)
+                    "SysId_Translation_State", SysIdRoutineLog.stateEnumToString(state)
                 )
             ),
             SysIdRoutine.Mechanism(
@@ -73,8 +70,9 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
             SysIdRoutine.Config(
                 rampRate = 1.0,
                 stepVoltage = 7.0,
+                timeout = 5.0,
                 recordState = lambda state: SignalLogger.write_string(
-                    "SysIdSteer_State", SysIdRoutineLog.stateEnumToString(state)
+                    "SysId_Steer_State", SysIdRoutineLog.stateEnumToString(state)
                 )
             ),
             SysIdRoutine.Mechanism(
@@ -93,7 +91,12 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         self.sys_id_routine_to_apply = self.sys_id_routines.getSelected()
 
     def periodic(self):
-        self.update_pose(self.get_state())
+        """
+        Periodically called by CommandScheduler for updating drivetrain states.
+        """
+
+        # Update pose in Field 2d Widget
+        self.update_pose_field2d(self.get_state())
 
     def apply_request(self, request):
         """
@@ -120,7 +123,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
                 # Red alliance sees forward as 180 degrees (toward blue alliance wall)
                 self.set_operator_perspective_forward(Rotation2d.fromDegrees(180))  
 
-    def update_pose(self, state: swerve.SwerveDrivetrain.SwerveDriveState):
+    def update_pose_field2d(self, state: swerve.SwerveDrivetrain.SwerveDriveState):
         """
         Accept the swerve drive state and telemeterize it to Shuffleboard.
         https://www.chiefdelphi.com/t/fatal-python-error-segmentation-fault-when-using-register-telemetry-in-phoenix-6-swerve-drive-api/483721/4

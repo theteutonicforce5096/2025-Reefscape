@@ -56,7 +56,7 @@ class SwerveDriveConstants:
     # The closed-loop output type to use for the steer motors;
     # This affects the PID/FF gains for the steer motors
     # https://www.chiefdelphi.com/t/motion-magic-velocity-control-for-drive-motors-in-phoenix6-swerve-drive-api/483669/6
-    _steer_closed_loop_output = swerve.ClosedLoopOutputType.VOLTAGE
+    _steer_closed_loop_output = swerve.ClosedLoopOutputType.TORQUE_CURRENT_FOC
 
     # The closed-loop output type to use for the drive motors;
     # This affects the PID/FF gains for the drive motors

@@ -3,7 +3,7 @@ from commands2.sysid import SysIdRoutine
 
 from subsystems.swerve_drive_constants import SwerveDriveConstants
 
-from phoenix6 import swerve
+from phoenix6 import swerve, SignalLogger
 
 from wpimath.units import rotationsToRadians
 from wpimath.filter import SlewRateLimiter
@@ -72,17 +72,11 @@ class RobotContainer:
     def configure_button_bindings_test(self):
         # Set the SysId Routine to run based off of the routine chosen in Shuffleboard.
         self.drivetrain.set_sys_id_routine()
+    
+        self.controller.leftBumper().onTrue(commands2.cmd.runOnce(SignalLogger.start))
+        self.controller.rightBumper().onTrue(commands2.cmd.runOnce(SignalLogger.stop))
 
-        # Note that each routine should be run exactly once in a single log.
-        (self.controller.leftTrigger() & self.controller.leftBumper()).whileTrue(
-            self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kForward)
-        )
-        (self.controller.leftTrigger() & self.controller.rightBumper()).whileTrue(
-            self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kReverse)
-        )
-        (self.controller.rightTrigger() & self.controller.leftBumper()).whileTrue(
-            self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kForward)
-        )
-        (self.controller.rightTrigger() & self.controller.rightBumper()).whileTrue(
-            self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kReverse)
-        )
+        self.controller.y().whileTrue(self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kForward))
+        self.controller.a().whileTrue(self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kReverse))
+        self.controller.b().whileTrue(self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kForward))
+        self.controller.x().whileTrue(self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kReverse))
