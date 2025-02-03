@@ -29,7 +29,7 @@ class Limelight:
 
         self.limelight_network_table.getEntry(entry_name).setDouble(value)
 
-    def set_robot_orientation(self, yaw):
+    def _set_robot_orientation(self, yaw):
         """
         Set the orientation of the robot in Limelight.
 
@@ -38,10 +38,16 @@ class Limelight:
         """
         self.limelight_network_table.getEntry("robot_orientation_set").setDoubleArray([yaw, 0, 0, 0, 0, 0])
 
-    def get_robot_pose(self):
+    def get_robot_pose(self, yaw):
         """
         Get the current pose of the robot from Limelight.
+
+        :param yaw: Current yaw of the robot in degrees
+        :type yaw: float
         """
+
+        # Set robot orientation in Limelight network tables
+        self._set_robot_orientation(yaw)
 
         # Get Robot pose and current timestamp
         robot_pose_timestamped_array = self.limelight_network_table.getDoubleArrayTopic("botpose_orb_wpiblue").getEntry([-100]).getAtomic()

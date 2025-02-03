@@ -106,11 +106,8 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         Periodically called by CommandScheduler for updating drivetrain state.
         """
 
-        # Set robot orientation in limelight 
-        self.limelight.set_robot_orientation(self.get_state_copy().pose.rotation().degrees())
-
         # Get robot pose from limelight
-        limelight_robot_pose, timestamp = self.limelight.get_robot_pose()
+        limelight_robot_pose, timestamp = self.limelight.get_robot_pose(self.get_state_copy().pose.rotation().degrees())
 
         # Don't try to add vision measurement if limelight robot pose is None
         if limelight_robot_pose == None or timestamp == None:
@@ -130,7 +127,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
                 self.add_vision_measurement(
                     limelight_robot_pose,
                     timestamp,
-                    (0.2, 0.2, radians(10))
+                    (0.5, 0.5, radians(45)) # (0.25, 0.25, radians(20))
                 )
 
             # Update limelight pose of robot in Field 2d Widget
