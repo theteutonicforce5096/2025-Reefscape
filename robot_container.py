@@ -28,7 +28,7 @@ class RobotContainer:
             swerve.requests.FieldCentric()
             .with_forward_perspective(swerve.requests.ForwardPerspectiveValue.OPERATOR_PERSPECTIVE)
             .with_drive_request_type(swerve.SwerveModule.DriveRequestType.VELOCITY)
-            .with_steer_request_type(swerve.SwerveModule.SteerRequestType.MOTION_MAGIC_EXPO)
+            .with_steer_request_type(swerve.SwerveModule.SteerRequestType.POSITION)
             .with_deadband(self.max_linear_speed * 0.01)
             .with_rotational_deadband(self.max_angular_rate * 0.01)
             .with_desaturate_wheel_speeds(True)

@@ -3,13 +3,14 @@ from commands2.sysid import SysIdRoutine
 from wpilib.sysid import SysIdRoutineLog
 
 from phoenix6 import swerve, SignalLogger
-from subsystems.sys_id_swerve_requests import SysIdSwerveTranslation, SysIdSwerveSteerGains
 
-from wpilib import DriverStation, Field2d, SendableChooser
+from subsystems.limelight import Limelight
+
 from wpilib.shuffleboard import Shuffleboard
+from wpilib import DriverStation, Field2d, SendableChooser
 
-from math import pi
 from wpimath.geometry import Rotation2d
+from math import radians
 
 class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
     """
@@ -37,13 +38,26 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         swerve.SwerveDrivetrain.__init__(self, drive_motor_type, steer_motor_type, encoder_type, 
                                          drivetrain_constants, modules)
         
-        # Create Field2d Widget in Shuffleboard
-        self.field = Field2d()
-        Shuffleboard.getTab("Drivers").add(f"Field", self.field).withSize(3, 3)
+        # Initialize Limelight
+        self.limelight = Limelight()
+
+        # Set Limelight's pipeline
+        self.limelight.set_limelight_network_table_entry_double("pipeline", 0)
+
+        # Set IMU mode to 0 (ignores Limelight's internal IMU and uses external IMU yaw)
+        self.limelight.set_limelight_network_table_entry_double("imumode_set", 0)
+
+        # Create Field2d Widgets
+        self.odometry_pose_field2d = Field2d()
+        self.limelight_pose_field2d = Field2d()
+
+        # Add Field2d Widgets to Shuffelboard
+        Shuffleboard.getTab("Pose Estimation").add(f"Odometry Pose Estimation", self.odometry_pose_field2d).withSize(3, 3)
+        Shuffleboard.getTab("Pose Estimation").add(f"Limelight Pose Estimation", self.limelight_pose_field2d).withSize(3, 3)
 
         # Swerve requests for SysId characterization
-        self.translation_characterization = SysIdSwerveTranslation()
-        self.steer_characterization = SysIdSwerveSteerGains()
+        self.translation_characterization = swerve.requests.SysIdSwerveTranslation()
+        self.steer_characterization = swerve.requests.SysIdSwerveSteerGains()
 
         # SysId routine for characterizing drive.
         self.sys_id_routine_translation = SysIdRoutine(
@@ -56,7 +70,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
                 )
             ),
             SysIdRoutine.Mechanism(
-                lambda output: self.set_control(self.translation_characterization.with_amps(output)),
+                lambda output: self.set_control(self.translation_characterization.with_volts(output)),
                 lambda log: None,
                 self,
             ),
@@ -73,7 +87,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
                 )
             ),
             SysIdRoutine.Mechanism(
-                lambda output: self.set_control(self.steer_characterization.with_amps(output)),
+                lambda output: self.set_control(self.steer_characterization.with_volts(output)),
                 lambda log: None,
                 self,
             ),
@@ -81,21 +95,49 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
 
         # SysId routine to test
         self.sys_id_routines = SendableChooser()
-        self.sys_id_routines.setDefaultOption("Steer Routine", self.sys_id_routine_steer)
-        self.sys_id_routines.addOption("Translation Routine", self.sys_id_routine_translation)
+        self.sys_id_routines.setDefaultOption("Translation Routine", self.sys_id_routine_translation)
+        self.sys_id_routines.addOption("Steer Routine", self.sys_id_routine_steer)
 
         Shuffleboard.getTab("SysId").add(f"Routines", self.sys_id_routines).withSize(2, 2)
         self.sys_id_routine_to_apply = self.sys_id_routines.getSelected()
 
     def periodic(self):
         """
-        Periodically called by CommandScheduler for updating drivetrain states.
+        Periodically called by CommandScheduler for updating drivetrain state.
         """
 
-        # Update pose in Field 2d Widget
-        self.update_pose_field2d(self.get_state())
+        # Set robot orientation in limelight 
+        self.limelight.set_robot_orientation(self.get_state_copy().pose.rotation().degrees())
 
+        # Get robot pose from limelight
+        limelight_robot_pose, timestamp = self.limelight.get_robot_pose()
 
+        # Don't try to add vision measurement if limelight robot pose is None
+        if limelight_robot_pose == None or timestamp == None:
+            pass
+        else:
+            odometry_robot_pose = self.get_state_copy().pose
+
+            # Calculate translation and rotation distance between the two poses
+            translation_robot_pose_distance = odometry_robot_pose.translation().distance(limelight_robot_pose)
+            rotation_robot_pose_distance = abs(
+                odometry_robot_pose.rotation().degrees() - limelight_robot_pose.rotation().degrees()
+            )
+
+            # Only add vision measurement if limelight robot pose is within 
+            # 1 meter translation and 90 degrees rotation of odometry robot pose
+            if translation_robot_pose_distance <= 1.0 and rotation_robot_pose_distance <= 90.0:
+                self.add_vision_measurement(
+                    limelight_robot_pose,
+                    timestamp,
+                    (0.2, 0.2, radians(10))
+                )
+
+            # Update limelight pose of robot in Field 2d Widget
+            self.limelight_pose_field2d.setRobotPose(limelight_robot_pose)
+        
+        # Update odometry pose of robot in Field 2d Widget
+        self.odometry_pose_field2d.setRobotPose(self.get_state_copy().pose)
 
     def apply_request(self, request):
         """
@@ -121,13 +163,6 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
             else:
                 # Red alliance sees forward as 180 degrees (toward blue alliance wall)
                 self.set_operator_perspective_forward(Rotation2d.fromDegrees(180))  
-
-    def update_pose_field2d(self, state: swerve.SwerveDrivetrain.SwerveDriveState):
-        """
-        Accept the swerve drive state and telemeterize it to Shuffleboard.
-        https://www.chiefdelphi.com/t/fatal-python-error-segmentation-fault-when-using-register-telemetry-in-phoenix-6-swerve-drive-api/483721/4
-        """
-        self.field.setRobotPose(state.pose)
 
     def set_sys_id_routine(self):
         """

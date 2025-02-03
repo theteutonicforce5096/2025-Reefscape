@@ -14,10 +14,9 @@ class SwerveDriveConstants:
     _steer_gains = (
         configs.Slot0Configs()
         .with_k_s(0.2)
-        #.with_k_v(1)
-        .with_k_p(75) # 60
+        .with_k_p(75)
         .with_k_i(0)
-        .with_k_d(1) # 3
+        .with_k_d(3)
         .with_static_feedforward_sign(signals.StaticFeedforwardSignValue.USE_CLOSED_LOOP_SIGN)
     )
 
@@ -34,6 +33,7 @@ class SwerveDriveConstants:
     )
 
     # The stator current at which the wheels start to slip
+    # Essentially used as stator current limit
     # https://v6.docs.ctr-electronics.com/en/2024/docs/api-reference/mechanisms/swerve/swerve-builder-api.html
     # https://v6.docs.ctr-electronics.com/en/latest/docs/hardware-reference/talonfx/improving-performance-with-current-limits.html#preventing-brownouts
     _slip_current: units.ampere = 120.0
