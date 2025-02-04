@@ -5,10 +5,8 @@ from subsystems.swerve_drive_constants import SwerveDriveConstants
 
 from phoenix6 import swerve, SignalLogger
 
-from wpimath.units import rotationsToRadians
 from wpimath.filter import SlewRateLimiter
-
-from math import copysign
+from wpimath.units import rotationsToRadians
 
 class RobotContainer:
     def __init__(self):
@@ -43,13 +41,15 @@ class RobotContainer:
         # Set the forward perspective of the robot for field oriented driving
         self.drivetrain.set_forward_perspective()
 
-        self.drivetrain.tare_everything()
-
+        # Set the starting pose of the robot in odometry and Limelight
+        starting_pose = self.drivetrain.get_initial_robot_pose_match()
+        self.drivetrain.reset_pose(starting_pose)
+        self.drivetrain.set_limelight_robot_orientation(starting_pose.rotation().degrees())
+    
         limit_direction = lambda x: min(x, 0.20) if x >= 0 else max(x, -0.20)
 
         # Set default command for drivetrain
         self.drivetrain.setDefaultCommand(
-            # Drivetrain will execute this command periodically
             self.drivetrain.apply_request(
                 lambda: (
                     self.drive.with_velocity_x(
