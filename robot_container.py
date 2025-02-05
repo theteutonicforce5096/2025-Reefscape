@@ -44,7 +44,7 @@ class RobotContainer:
         # Set the starting pose of the robot in odometry and Limelight
         starting_pose = self.drivetrain.get_initial_robot_pose_match()
         self.drivetrain.reset_pose(starting_pose)
-        self.drivetrain.set_limelight_robot_orientation(starting_pose.rotation().degrees())
+        #self.drivetrain.set_limelight_robot_orientation(starting_pose.rotation().degrees())
     
         limit_direction = lambda x: min(x, 0.20) if x >= 0 else max(x, -0.20)
 

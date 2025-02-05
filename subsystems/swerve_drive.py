@@ -46,8 +46,8 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         # Create Field2d Widgets and add them to Shuffleboard
         self.odometry_pose_field2d = Field2d()
         self.limelight_pose_field2d = Field2d()
-        Shuffleboard.getTab("Pose Estimation").add(f"Odometry Pose Estimation", self.odometry_pose_field2d).withSize(3, 3)
-        Shuffleboard.getTab("Pose Estimation").add(f"Limelight Pose Estimation", self.limelight_pose_field2d).withSize(3, 3)
+        Shuffleboard.getTab("Pose Estimation").add(f"Odometry Pose Estimation", self.odometry_pose_field2d).withSize(4, 2)
+        Shuffleboard.getTab("Pose Estimation").add(f"Limelight Pose Estimation", self.limelight_pose_field2d).withSize(4, 2)
 
         # Swerve requests for SysId characterization
         self.translation_characterization = swerve.requests.SysIdSwerveTranslation()
@@ -94,7 +94,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         self.sys_id_routines.addOption("Steer Routine", self.sys_id_routine_steer)
 
         # Send widget to Shuffleboard 
-        Shuffleboard.getTab("SysId").add(f"Routines", self.sys_id_routines).withSize(2, 2)
+        Shuffleboard.getTab("SysId").add(f"Routines", self.sys_id_routines).withSize(2, 1)
 
     def periodic(self):
         """
@@ -182,7 +182,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
             odometry_robot_pose = self.get_state_copy().pose
 
             # Calculate translation and rotation distance between the two poses
-            translation_robot_pose_distance = odometry_robot_pose.translation().distance(limelight_robot_pose)
+            translation_robot_pose_distance = odometry_robot_pose.translation().distance(limelight_robot_pose.translation())
             rotation_robot_pose_distance = abs(
                 odometry_robot_pose.rotation().degrees() - limelight_robot_pose.rotation().degrees()
             )
