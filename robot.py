@@ -43,11 +43,11 @@ class ReefscapeRobot(wpilib.TimedRobot):
 
     def teleopPeriodic(self):
         
-        if self.pxn_fightstick.getRawButtonReleased(5):
+        if self.pxn_fightstick.getRawButtonReleased(1):
             self.act.PSA()
-        if self.pxn_fightstick.getRawButtonReleased(4):
-            self.act.PLA()
         if self.pxn_fightstick.getRawButtonReleased(2):
+            self.act.PLA()
+        if self.pxn_fightstick.getRawButtonReleased(3):
             self.act.RESET()
         # # Get speeds from drivetrain controller.
         # forward_speed = self.drivetrain_controller.getLeftY()
