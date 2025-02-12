@@ -16,7 +16,7 @@ class SwerveDriveConstants:
         .with_k_s(0.10)
         .with_k_p(100)
         .with_k_i(0)
-        .with_k_d(0)
+        .with_k_d(0.5)
         .with_static_feedforward_sign(signals.StaticFeedforwardSignValue.USE_CLOSED_LOOP_SIGN)
     )
 
@@ -36,7 +36,7 @@ class SwerveDriveConstants:
     # Essentially used as stator current limit
     # https://v6.docs.ctr-electronics.com/en/2024/docs/api-reference/mechanisms/swerve/swerve-builder-api.html
     # https://v6.docs.ctr-electronics.com/en/latest/docs/hardware-reference/talonfx/improving-performance-with-current-limits.html#preventing-brownouts
-    _slip_current: units.ampere = 120.0
+    _slip_current: units.ampere = 30.0 # 120.0
 
     # Every 1 rotation of the azimuth results in _couple_ratio drive motor turns
     # https://www.chiefdelphi.com/t/kcoupleratio-in-ctre-swerve/483380

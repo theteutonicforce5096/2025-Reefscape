@@ -5,6 +5,8 @@ from subsystems.swerve_drive_constants import SwerveDriveConstants
 
 from phoenix6 import swerve, SignalLogger
 
+from pathplannerlib.auto import AutoBuilder
+
 from wpimath.filter import SlewRateLimiter
 from wpimath.units import rotationsToRadians
 
@@ -42,35 +44,26 @@ class RobotContainer:
         self.drivetrain.set_forward_perspective()
 
         # Set the starting pose of the robot in odometry and Limelight
-        starting_pose = self.drivetrain.get_initial_robot_pose_match()
-        self.drivetrain.reset_pose(starting_pose)
-        #self.drivetrain.set_limelight_robot_orientation(starting_pose.rotation().degrees())
+        starting_pose = self.drivetrain.get_starting_position()
+        self.drivetrain.set_starting_position(starting_pose)
     
-        limit_direction = lambda x: min(x, 0.20) if x >= 0 else max(x, -0.20)
-
         # Set default command for drivetrain
         self.drivetrain.setDefaultCommand(
             self.drivetrain.apply_request(
                 lambda: (
                     self.drive.with_velocity_x(
                         self.straight_speed_limiter.calculate(
-                            (limit_direction(
-                                -(self.controller.getLeftY() * abs(self.controller.getLeftY()))
-                            ) * self.max_linear_speed)
+                            -(self.controller.getLeftY() * abs(self.controller.getLeftY())) * self.max_linear_speed
                         )
-                    ) 
+                    )
                     .with_velocity_y(
                         self.strafe_speed_limiter.calculate(
-                            (limit_direction(
-                                -(self.controller.getLeftX() * abs(self.controller.getLeftX()))
-                            ) * self.max_linear_speed)
+                            -(self.controller.getLeftX() * abs(self.controller.getLeftX())) * self.max_linear_speed
                         )
                     )
                     .with_rotational_rate(
                         self.rotation_speed_limiter.calculate(
-                            (limit_direction(
-                                -(self.controller.getRightX() * abs(self.controller.getRightX()))
-                            ) * self.max_angular_rate)
+                            -(self.controller.getRightX() * abs(self.controller.getRightX())) * self.max_angular_rate
                         )
                     )
                 )
@@ -79,7 +72,12 @@ class RobotContainer:
         
         # Reset the field centric heading using left bumper, right bumper, and A button.
         (self.controller.leftBumper() & self.controller.rightBumper() & self.controller.a()).onTrue(
-            self.drivetrain.runOnce(lambda: self.drivetrain.seed_field_centric()))
+            self.drivetrain.runOnce(lambda: self.drivetrain.seed_field_centric())
+        )
+        
+        self.controller.b().onTrue(
+            AutoBuilder.followPath(self.drivetrain.create_path())
+        )
     
     def configure_button_bindings_test(self):
         # Set the SysId Routine to run based off of the routine chosen in Shuffleboard.

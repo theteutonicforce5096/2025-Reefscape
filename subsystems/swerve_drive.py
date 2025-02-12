@@ -1,8 +1,13 @@
 from commands2 import Subsystem
+from commands2.cmd import sequence, waitSeconds
 from commands2.sysid import SysIdRoutine
 from wpilib.sysid import SysIdRoutineLog
 
 from phoenix6 import swerve, SignalLogger
+
+from pathplannerlib.auto import AutoBuilder, RobotConfig
+from pathplannerlib.controller import PIDConstants, PPHolonomicDriveController
+from pathplannerlib.path import PathPlannerPath, PathConstraints, GoalEndState
 
 from subsystems.limelight import Limelight
 
@@ -10,7 +15,7 @@ from wpilib.shuffleboard import Shuffleboard
 from wpilib import DriverStation, Field2d, SendableChooser
 
 from wpimath.geometry import Pose2d, Rotation2d
-from math import radians
+from math import radians, pi
 
 class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
     """
@@ -44,10 +49,8 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         self.limelight.set_limelight_network_table_entry_double("imumode_set", 2)
 
         # Create Field2d Widgets and add them to Shuffleboard
-        self.odometry_pose_field2d = Field2d()
-        self.limelight_pose_field2d = Field2d()
-        Shuffleboard.getTab("Pose Estimation").add(f"Odometry Pose Estimation", self.odometry_pose_field2d).withSize(4, 2)
-        Shuffleboard.getTab("Pose Estimation").add(f"Limelight Pose Estimation", self.limelight_pose_field2d).withSize(4, 2)
+        self.field2d = Field2d()
+        Shuffleboard.getTab("Pose Estimation").add(f"Estimated Pose", self.field2d).withSize(4, 2)
 
         # Swerve requests for SysId characterization
         self.translation_characterization = swerve.requests.SysIdSwerveTranslation()
@@ -96,6 +99,8 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         # Send widget to Shuffleboard 
         Shuffleboard.getTab("SysId").add(f"Routines", self.sys_id_routines).withSize(2, 1)
 
+        self.configure_auto_builder()
+
     def periodic(self):
         """
         Periodically called by CommandScheduler for updating drivetrain state.
@@ -106,10 +111,38 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
 
         # Add Limelight vision measurement to odometry
         self.add_limelight_vision_measurement(limelight_robot_pose, timestamp, 
-                                              1.0, 90.0, (0.5, 0.5, radians(45))) # (0.25, 0.25, radians(20))
+                                              1.0, 30.0, (0.25, 0.25, radians(20)))
         
         # Update odometry pose of robot in odometry Field 2d Widget
-        self.odometry_pose_field2d.setRobotPose(self.get_state_copy().pose)
+        self.field2d.setRobotPose(self.get_state_copy().pose)
+
+    def configure_auto_builder(self):
+        """
+        Configure PathPlanner for autonomous and path following.
+        """
+        AutoBuilder.configure(
+            lambda: self.get_state_copy().pose,   # Supplier of current robot pose
+            self.reset_pose,                 # Consumer for seeding pose against auto
+            lambda: self.get_state_copy().speeds, # Supplier of current robot speeds
+            # Consumer of ChassisSpeeds and feedforwards to drive the robot
+            lambda speeds, feedforwards: self.set_control(
+                swerve.requests.ApplyRobotSpeeds()
+                .with_speeds(speeds)
+                .with_wheel_force_feedforwards_x(feedforwards.robotRelativeForcesXNewtons)
+                .with_wheel_force_feedforwards_y(feedforwards.robotRelativeForcesYNewtons)
+            ),
+            PPHolonomicDriveController(
+                # PID constants for translation
+                PIDConstants(10.0, 0.0, 0.0),
+                # PID constants for rotation
+                PIDConstants(7.0, 0.0, 0.0)
+            ),
+            RobotConfig.fromGUISettings(),
+            # Assume the path needs to be flipped for Red vs Blue, this is normally the case
+            lambda: 
+            (DriverStation.getAlliance() or DriverStation.Alliance.kBlue) == DriverStation.Alliance.kRed,
+            self # Subsystem for requirements
+        )
 
     def apply_request(self, request):
         """
@@ -121,6 +154,29 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         :rtype: Command
         """
         return self.run(lambda: self.set_control(request()))
+
+    def create_path(self):
+        waypoints = PathPlannerPath.waypointsFromPoses(
+            [
+                self.get_state().pose,
+                Pose2d(3.112, 4.039, Rotation2d.fromDegrees(0))
+            ]
+        )
+
+        constraints = PathConstraints(1.0, 3.0, 1 * pi, 3 * pi)
+
+        # Create the path using the waypoints created above
+        path = PathPlannerPath(
+            waypoints,
+            constraints,
+            None,
+            GoalEndState(0.0, Rotation2d.fromDegrees(0)) # Goal end state. You can set a holonomic rotation here. If using a differential drivetrain, the rotation will have no effect.
+        )
+
+        # Prevent the path from being flipped if the coordinates are already correct
+        path.preventFlipping = True
+
+        return path
     
     def set_forward_perspective(self):
         """
@@ -136,7 +192,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
                 # Red alliance sees forward as 180 degrees (toward blue alliance wall)
                 self.set_operator_perspective_forward(Rotation2d.fromDegrees(180))  
 
-    def get_initial_robot_pose_match(self):
+    def get_starting_position(self):
         """
         Get the initial pose that the robot should be at on the field when a match starts.
         """
@@ -144,16 +200,22 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         # Pull pose from pathplanner if set up
         # Since not yet set up or poses not set up based on driverstation
         # Use something random
-        return Pose2d(0, 0, Rotation2d.fromDegrees(0))
+        return Pose2d(1.112, 4.039, Rotation2d.fromDegrees(0))
     
-    def set_limelight_robot_orientation(self, yaw):
+    def set_starting_position(self, starting_pose: Pose2d):
         """
-        Set the orientation of the robot in Limelight for Pose Estimation.
+        Set the starting the pose of the robot in odometry and set the starting yaw in Limelight.
         """
-        self.limelight.set_limelight_network_table_entry_double("imumode_set", 1)
-        self.limelight.set_robot_orientation(yaw)
-        self.limelight.set_limelight_network_table_entry_double("imumode_set", 2)
-
+        starting_position_commands = sequence(
+            self.runOnce(lambda: self.reset_pose(starting_pose)),
+            self.runOnce(lambda: self.limelight.set_limelight_network_table_entry_double("imumode_set", 1)),
+            self.runOnce(lambda: self.limelight.set_robot_orientation(starting_pose.rotation().degrees())),
+            waitSeconds(0.02), 
+            self.runOnce(lambda: self.limelight.set_limelight_network_table_entry_double("imumode_set", 2)),
+        )
+        
+        starting_position_commands.schedule()
+        
     def add_limelight_vision_measurement(self, limelight_robot_pose: Pose2d, timestamp, 
                                          max_translation_difference, max_rotation_difference, std_devs):
         """
@@ -195,9 +257,6 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
                     timestamp,
                     std_devs
                 )
-
-            # Update limelight pose of robot in limelight Field 2d Widget
-            self.limelight_pose_field2d.setRobotPose(limelight_robot_pose)
 
     def set_sys_id_routine(self):
         """
