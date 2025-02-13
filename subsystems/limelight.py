@@ -24,10 +24,20 @@ class Limelight:
         :parma entry_name: Name of the network table entry
         :type entry_name: str
         :param value: Value to set to the network table entry
-        :type value: double
+        :type value: float
         """
 
         self.limelight_network_table.getEntry(entry_name).setDouble(value)
+
+    def get_primary_apriltag_id(self, default_value):
+        """
+        Get the ID of the primary in-view AprilTag.
+
+        :param default_value: Value to return if no value is found.
+        :type default_value: int
+        """
+
+        self.limelight_network_table.getEntry("tid").getInteger(default_value)
 
     def set_robot_orientation(self, yaw):
         """

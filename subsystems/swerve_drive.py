@@ -1,3 +1,6 @@
+from pathlib import Path
+import json
+
 from commands2 import Subsystem
 from commands2.cmd import sequence, waitSeconds
 from commands2.sysid import SysIdRoutine
@@ -7,7 +10,7 @@ from phoenix6 import swerve, SignalLogger
 
 from pathplannerlib.auto import AutoBuilder, RobotConfig
 from pathplannerlib.controller import PIDConstants, PPHolonomicDriveController
-from pathplannerlib.path import PathPlannerPath, PathConstraints, GoalEndState
+from pathplannerlib.path import PathPlannerPath, PathConstraints, ConstraintsZone, GoalEndState
 
 from subsystems.limelight import Limelight
 
@@ -48,13 +51,37 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         self.limelight.set_limelight_network_table_entry_double("pipeline", 0)
         self.limelight.set_limelight_network_table_entry_double("imumode_set", 2)
 
-        # Create Field2d Widgets and add them to Shuffleboard
+        AutoBuilder.configure(
+            lambda: self.get_state_copy().pose,
+            self.reset_pose,
+            lambda: self.get_state_copy().speeds,
+            lambda speeds, feedforwards: self.set_control(
+                swerve.requests.ApplyRobotSpeeds()
+                .with_speeds(speeds)
+                .with_wheel_force_feedforwards_x(feedforwards.robotRelativeForcesXNewtons)
+                .with_wheel_force_feedforwards_y(feedforwards.robotRelativeForcesYNewtons)
+            ),
+            PPHolonomicDriveController(
+                PIDConstants(10.0, 0.0, 0.0),
+                PIDConstants(7.0, 0.0, 0.0)
+            ),
+            RobotConfig.fromGUISettings(),
+            lambda: (DriverStation.getAlliance() or DriverStation.Alliance.kBlue) == DriverStation.Alliance.kRed,
+            self
+        )
+
+        # Create Field2d Widget and add it to Shuffleboard
         self.field2d = Field2d()
         Shuffleboard.getTab("Pose Estimation").add(f"Estimated Pose", self.field2d).withSize(4, 2)
+
+        # Get Reef Poses Dictionary
+        with open(Path(__file__).parent / "reef_poses.json", "r") as f:
+            self.reef_poses = json.load(f) 
 
         # Swerve requests for SysId characterization
         self.translation_characterization = swerve.requests.SysIdSwerveTranslation()
         self.steer_characterization = swerve.requests.SysIdSwerveSteerGains()
+        self.rotation_characterization = swerve.requests.SysIdSwerveRotation()
 
         # Create SysId routine for characterizing drive.
         self.sys_id_routine_translation = SysIdRoutine(
@@ -90,16 +117,31 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
             ),
         )
 
+        self.sys_id_routine_rotation = SysIdRoutine(
+            SysIdRoutine.Config(
+                rampRate = pi / 6,
+                stepVoltage = 7.0,
+                timeout = 5.0,
+                recordState = lambda state: SignalLogger.write_string(
+                    "SysId_Rotation_State", SysIdRoutineLog.stateEnumToString(state)
+                ),
+            ),
+            SysIdRoutine.Mechanism(
+                lambda output: self.set_control(self.rotation_characterization.with_rotational_rate(output)),
+                lambda log: None,
+                self,
+            ),
+        )
+
         # Create widget for selecting SysId routine and set default value
         self.sys_id_routine_to_apply = self.sys_id_routine_translation
         self.sys_id_routines = SendableChooser()
         self.sys_id_routines.setDefaultOption("Translation Routine", self.sys_id_routine_translation)
         self.sys_id_routines.addOption("Steer Routine", self.sys_id_routine_steer)
+        self.sys_id_routines.addOption("Rotation Routine", self.sys_id_routine_rotation)
 
         # Send widget to Shuffleboard 
         Shuffleboard.getTab("SysId").add(f"Routines", self.sys_id_routines).withSize(2, 1)
-
-        self.configure_auto_builder()
 
     def periodic(self):
         """
@@ -111,38 +153,10 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
 
         # Add Limelight vision measurement to odometry
         self.add_limelight_vision_measurement(limelight_robot_pose, timestamp, 
-                                              1.0, 30.0, (0.25, 0.25, radians(20)))
+                                              1.0, 30.0, (0.25, 0.25, radians(10)))
         
         # Update odometry pose of robot in odometry Field 2d Widget
         self.field2d.setRobotPose(self.get_state_copy().pose)
-
-    def configure_auto_builder(self):
-        """
-        Configure PathPlanner for autonomous and path following.
-        """
-        AutoBuilder.configure(
-            lambda: self.get_state_copy().pose,   # Supplier of current robot pose
-            self.reset_pose,                 # Consumer for seeding pose against auto
-            lambda: self.get_state_copy().speeds, # Supplier of current robot speeds
-            # Consumer of ChassisSpeeds and feedforwards to drive the robot
-            lambda speeds, feedforwards: self.set_control(
-                swerve.requests.ApplyRobotSpeeds()
-                .with_speeds(speeds)
-                .with_wheel_force_feedforwards_x(feedforwards.robotRelativeForcesXNewtons)
-                .with_wheel_force_feedforwards_y(feedforwards.robotRelativeForcesYNewtons)
-            ),
-            PPHolonomicDriveController(
-                # PID constants for translation
-                PIDConstants(10.0, 0.0, 0.0),
-                # PID constants for rotation
-                PIDConstants(7.0, 0.0, 0.0)
-            ),
-            RobotConfig.fromGUISettings(),
-            # Assume the path needs to be flipped for Red vs Blue, this is normally the case
-            lambda: 
-            (DriverStation.getAlliance() or DriverStation.Alliance.kBlue) == DriverStation.Alliance.kRed,
-            self # Subsystem for requirements
-        )
 
     def apply_request(self, request):
         """
@@ -155,25 +169,45 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         """
         return self.run(lambda: self.set_control(request()))
 
-    def create_path(self):
+    def get_align_to_reef_path(self, side):
+        """
+        Return a PathPlanner path that aligns the robot to the closest side of the reef on either the 
+        left or right side of the AprilTag.
+
+        :param side: Side of AprilTag to align robot to on reef.
+        :type side: ["Left", "Right"]
+        """
+
+        # Get the ID of the primary in-view AprilTag.
+        tag_id = self.limelight.get_primary_apriltag_id(None)
+
+        # Get target pose if AprilTag is in Reef Poses
+        if tag_id in self.reef_poses:
+            target_pose = self.reef_poses[tag_id][side]
+        else:
+            return None
+
         waypoints = PathPlannerPath.waypointsFromPoses(
             [
-                self.get_state().pose,
-                Pose2d(3.112, 4.039, Rotation2d.fromDegrees(0))
+                self.get_state_copy().pose,
+                Pose2d(target_pose[0], target_pose[1], Rotation2d.fromDegrees(target_pose[2]))
             ]
         )
 
-        constraints = PathConstraints(1.0, 3.0, 1 * pi, 3 * pi)
-
-        # Create the path using the waypoints created above
         path = PathPlannerPath(
             waypoints,
-            constraints,
+            PathConstraints(1.0, 3.0, 1 * pi, 3 * pi),
             None,
-            GoalEndState(0.0, Rotation2d.fromDegrees(0)) # Goal end state. You can set a holonomic rotation here. If using a differential drivetrain, the rotation will have no effect.
+            GoalEndState(0.0, Rotation2d.fromDegrees(target_pose[2])),
+            constraint_zones = [
+                ConstraintsZone(
+                    0.75,
+                    1.00,
+                    PathConstraints(0.5, 1.5, 0.5 * pi, 1.5 * pi)
+                )
+            ]
         )
 
-        # Prevent the path from being flipped if the coordinates are already correct
         path.preventFlipping = True
 
         return path
@@ -210,7 +244,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
             self.runOnce(lambda: self.reset_pose(starting_pose)),
             self.runOnce(lambda: self.limelight.set_limelight_network_table_entry_double("imumode_set", 1)),
             self.runOnce(lambda: self.limelight.set_robot_orientation(starting_pose.rotation().degrees())),
-            waitSeconds(0.02), 
+            waitSeconds(50 / 1000), 
             self.runOnce(lambda: self.limelight.set_limelight_network_table_entry_double("imumode_set", 2)),
         )
         

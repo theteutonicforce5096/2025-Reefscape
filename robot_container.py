@@ -1,5 +1,6 @@
 import commands2
 from commands2.sysid import SysIdRoutine
+from commands2.cmd import print_
 
 from subsystems.swerve_drive_constants import SwerveDriveConstants
 
@@ -75,8 +76,20 @@ class RobotContainer:
             self.drivetrain.runOnce(lambda: self.drivetrain.seed_field_centric())
         )
         
+        self.controller.x().onTrue(
+            lambda: (
+                AutoBuilder.followPath(path).until(lambda: self.controller.getHID().getYButtonPressed())
+                if (path := self.drivetrain.get_align_to_reef_path("Left")) == None
+                else print_("Reef Tag Not Found.")
+            )
+        )
+
         self.controller.b().onTrue(
-            AutoBuilder.followPath(self.drivetrain.create_path())
+            lambda: (
+                AutoBuilder.followPath(path).until(lambda: self.controller.getHID().getYButtonPressed())
+                if (path := self.drivetrain.get_align_to_reef_path("Right")) == None
+                else print_("Reef Tag Not Found.")
+            )
         )
     
     def configure_button_bindings_test(self):
