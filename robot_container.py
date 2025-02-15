@@ -4,9 +4,9 @@ from commands2.cmd import print_
 
 from subsystems.swerve_drive_constants import SwerveDriveConstants
 
-from phoenix6 import swerve, SignalLogger
+from pathplannerlib.auto import PathConstraints
 
-from pathplannerlib.auto import AutoBuilder, PathConstraints
+from phoenix6 import swerve, SignalLogger
 
 from wpimath.filter import SlewRateLimiter
 from wpimath.units import rotationsToRadians
@@ -82,30 +82,20 @@ class RobotContainer:
         )
         
         self.controller.x().onTrue(
-            lambda: (
-                AutoBuilder.pathfindToPose(
-                    target_pose,
-                    PathConstraints(1.0, 3.0, 1 * pi, 3 * pi),
-                    0.0
-                ).until(
-                    lambda: self.controller.getHID().getYButtonPressed()
-                )
-                if (target_pose := self.drivetrain.get_target_reef_pose(False)) != None
-                else print_("Reef Tag Not Found.")
+            self.drivetrain.get_reef_alignment_command(
+                PathConstraints(1.0, 3.0, 1 * pi, 3 * pi),
+                0.0,
+                self.controller,
+                False
             )
         )
 
         self.controller.b().onTrue(
-            lambda: (
-                AutoBuilder.pathfindToPose(
-                    target_pose,
-                    PathConstraints(1.0, 3.0, 1 * pi, 3 * pi),
-                    0.0
-                ).until(
-                    lambda: self.controller.getHID().getYButtonPressed()
-                )
-                if (target_pose := self.drivetrain.get_target_reef_pose(True)) != None
-                else print_("Reef Tag Not Found.")
+            self.drivetrain.get_reef_alignment_command(
+                PathConstraints(1.0, 3.0, 1 * pi, 3 * pi),
+                0.0,
+                self.controller,
+                True
             )
         )
     

@@ -84,7 +84,7 @@ class SwerveDriveConstants:
     # stator current limit to help avoid brownouts without impacting performance.
     _steer_initial_configs = configs.TalonFXConfiguration().with_current_limits(
         configs.CurrentLimitsConfigs()
-        .with_stator_current_limit(60).with_stator_current_limit_enable(True)
+        .with_stator_current_limit(30).with_stator_current_limit_enable(True) #60
     )
 
     _encoder_initial_configs = configs.CANcoderConfiguration()

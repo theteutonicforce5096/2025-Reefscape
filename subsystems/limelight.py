@@ -66,12 +66,16 @@ class Limelight:
             # Get robot pose
             robot_pose = Pose2d(robot_pose_array[0], robot_pose_array[1], Rotation2d.fromDegrees(robot_pose_array[5]))
 
-            # Get latency
-            latency = robot_pose_array[6]
+            if robot_pose == Pose2d(0, 0, 0):
+                robot_pose = None
+                timestamp = None
+            else:
+                # Get latency
+                latency = robot_pose_array[6]
 
-            # Convert server timestamp from microseconds to seconds and adjust for latency in ms.
-            # Then, convert to timebase that phoenix6 uses.
-            timestamp = utils.fpga_to_current_time((fpga_timestamp_microseconds / 1000000.0) - (latency / 1000.0))            
+                # Convert server timestamp from microseconds to seconds and adjust for latency in ms.
+                # Then, convert to timebase that phoenix6 uses.
+                timestamp = utils.fpga_to_current_time((fpga_timestamp_microseconds / 1000000.0) - (latency / 1000.0))            
 
         # Return robot pose and timestamp
         return robot_pose, timestamp

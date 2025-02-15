@@ -1,12 +1,16 @@
 from commands2 import Subsystem
 from commands2.sysid import SysIdRoutine
+from commands2.cmd import print_
+from commands2.button import CommandXboxController
+
 from wpilib.sysid import SysIdRoutineLog
 
 from phoenix6 import swerve, SignalLogger
 
 from robotpy_apriltag import AprilTagFieldLayout, AprilTagField
 
-from pathplannerlib.auto import AutoBuilder, RobotConfig
+from pathplannerlib.auto import AutoBuilder, RobotConfig, PathConstraints
+
 from pathplannerlib.controller import PIDConstants, PPHolonomicDriveController
 
 from subsystems.limelight import Limelight
@@ -188,7 +192,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         """
         return self.run(lambda: self.set_control(request()))
 
-    def get_target_reef_pose(self, right_side):
+    def calculate_reef_alignment_pose(self, right_side):
         """
         Return the pose that the robot should target to the Reef that is the closest to its current position
         on either the left or right side of an AprilTag on the Reef.
@@ -201,6 +205,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         # Get the ID of the primary in-view AprilTag and get target side for alignment.
         tag_id = self.limelight.get_primary_apriltag_id(None)
         target_side = "Right" if right_side else "Left"
+        print(tag_id)
 
         # Return None if no AprilTag found otherwise get the pose of the AprilTag
         if tag_id == None:
@@ -280,6 +285,36 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
             return tag_pose.transformBy(transform_front_bumper_to_reef).transformBy(transform_robot_left_or_right)
         else:
             return None
+        
+    def get_reef_alignment_command(self, path_constraints: PathConstraints, 
+                                   goal_end_velocity: float, controller: CommandXboxController, 
+                                   right_side: bool):
+        """
+        Return the command that moves the robot to the side of the Reef 
+        that is the closest to its current position
+        on either the left or right side of an AprilTag on the Reef.
+
+        :param path_constraints: Path constraints that the robot should follow while moving
+        :type path_constraints: PathConstraints
+        :param goal_end_velocity: Velocity the robot should have when reaching the target 
+        :type goal_end_velocity: bool
+        :param controller: Controller Y button that should stop Alignment Command
+        :type controller: CommandXboxController
+        :param right_side: Align robot to right side of AprilTag on Reef.
+        :type right_side: bool
+        """
+        
+        target_pose = self.calculate_reef_alignment_pose(right_side)
+        if target_pose != None:
+            return AutoBuilder.pathfindToPose(
+                target_pose,
+                path_constraints,
+                goal_end_velocity
+            ).until(
+                lambda: controller.getHID().getYButtonPressed()
+            )
+        else:
+            return print_("Reef Tag Not Found.")
 
     def set_forward_perspective(self):
         """
