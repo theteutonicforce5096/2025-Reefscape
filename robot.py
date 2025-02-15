@@ -7,10 +7,11 @@ from subsystems import Climbguy
 
 class ReefscapeRobot(wpilib.TimedRobot):
     def robotInit(self):
-        self.pxn_fightstick = wpilib.Joystick(2)
-        self.Bigguy = Climbguy.climb_mechanism()
-        self.ratchet_engage = False
-        self.climbing = False
+        self.pxn_fightstick = wpilib.Joystick(0)
+        self.Climbgal = Climbguy.climb_mechanism()
+        
+        # self.ratchet_engage = False
+        # self.climbing = False
         # # Set brownout voltage
         # wpilib.RobotController.setBrownoutVoltage(6.3)
 
@@ -31,11 +32,11 @@ class ReefscapeRobot(wpilib.TimedRobot):
         # self.rotation_speed = 0
 
     def teleopInit(self):
-        self.ratchet_engage = False
-        self.Bigguy.__disengageRatchet__()
-        self.climbing = False
-        self.Bigguy.SM()
-        pass
+       pass
+        # self.ratchet_engage = False
+        #self.Bigguy.__disengageRatchet__()
+        # self.climbing = False
+        
         # # Reset timers
         # self.timer.restart()
         # self.drivetrain_timer.reset()
@@ -51,21 +52,21 @@ class ReefscapeRobot(wpilib.TimedRobot):
 
     def teleopPeriodic(self):
 
-        if self.pxn_fightstick.getRawButtonReleased(1):
-            self.climbing = not self.climbing
-            if self.climbing:
-                self.Bigguy.RM()
-            else:
-                self.Bigguy.SM()
+        if self.pxn_fightstick.getRawButtonPressed(1):
+           self.Climbgal.climb()
 
         if self.pxn_fightstick.getRawButtonPressed(2):
-            self.ratchet_engage = not self.ratchet_engage
-            if self.ratchet_engage:
-                self.Bigguy.__engageRatchet__()
-            else:
-                self.Bigguy.__disengageRatchet__()
+           self.Climbgal.reset()
+           
+        if self.pxn_fightstick.getRawButtonPressed(3):
+            self.Climbgal.__incrementRatchet__()
+        
+        if self.pxn_fightstick.getRawButtonPressed(4): 
+            self.Climbgal.__decrementRatchet__()
+        
 
-        self.Bigguy.periodic()
+
+        self.Climbgal.periodic()
         
         # Get speeds from drivetrain controller.
         # forward_speed = self.drivetrain_controller.getLeftY()
