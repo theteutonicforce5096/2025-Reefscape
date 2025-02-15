@@ -1,5 +1,4 @@
 from commands2 import Subsystem
-from commands2.cmd import sequence, waitSeconds
 from commands2.sysid import SysIdRoutine
 from wpilib.sysid import SysIdRoutineLog
 
@@ -211,7 +210,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
 
         # Get vector components for vector that translates robot from AprilTag pose to front bumper touching Reef
         # assuming robot is orientated straight
-        x_component_reef = self.robot_length / 2
+        x_component_reef = (self.robot_length / 2) + self.robot_distance_to_reef
         y_component_reef = 0.0
 
         # Get vector components for vector that translates robot to left or right side of AprilTag 
@@ -239,8 +238,8 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         else:
             # Get vector components for vector that translates robot from AprilTag pose to front bumper touching Reef
             # assuming robot is angled at 60 degrees
-            x_component_reef = cos(radians(60)) * (self.robot_length / 2)
-            y_component_reef = sin(radians(60)) * (self.robot_length / 2)
+            x_component_reef = cos(radians(60)) * ((self.robot_length / 2) + self.robot_distance_to_reef)
+            y_component_reef = sin(radians(60)) * ((self.robot_length / 2) + self.robot_distance_to_reef)
 
             # Get vector components for vector that translates robot to left or right side of AprilTag 
             # assuming robot is angled at 60 degrees
