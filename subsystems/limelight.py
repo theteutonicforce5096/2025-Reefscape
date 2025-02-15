@@ -47,6 +47,7 @@ class Limelight:
         :type yaw: float
         """
         self.limelight_network_table.getEntry("robot_orientation_set").setDoubleArray([yaw, 0, 0, 0, 0, 0])
+        NetworkTableInstance.getDefault().flush()
 
     def get_robot_pose(self):
         """

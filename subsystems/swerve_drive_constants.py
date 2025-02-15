@@ -215,9 +215,14 @@ class SwerveDriveConstants:
     )
 
     @classmethod
-    def create_drivetrain(clazz) -> SwerveDrive:
+    def create_drivetrain(clazz, robot_length, robot_distance_to_reef, robot_distance_to_coral) -> SwerveDrive:
         """
         Creates a SwerveDrive instance.
+
+        :param robot_length: Length of the robot in meters.
+        :type robot_length: float
+        :param robot_distance_to_reef: Distance in meters the robot needs to be away from reef for alignment to Reef
+        :type robot_distance_to_reef: float
         """
 
         return SwerveDrive(
@@ -231,4 +236,7 @@ class SwerveDriveConstants:
                 clazz.back_left,
                 clazz.back_right,
             ],
+            robot_length,
+            robot_distance_to_reef,
+            robot_distance_to_coral
         )
