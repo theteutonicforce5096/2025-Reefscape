@@ -37,9 +37,9 @@ class RobotContainer:
         )
 
         # Create slew rate limiters for limiting robot acceleration
-        self.straight_speed_limiter = SlewRateLimiter(self.max_linear_speed * 2, -self.max_linear_speed * 2)
-        self.strafe_speed_limiter = SlewRateLimiter(self.max_linear_speed * 2, -self.max_linear_speed * 2)
-        self.rotation_speed_limiter = SlewRateLimiter(self.max_angular_rate * 2, -self.max_angular_rate * 2)
+        self.straight_speed_limiter = SlewRateLimiter(self.max_linear_speed * 4, -self.max_linear_speed * 4)
+        self.strafe_speed_limiter = SlewRateLimiter(self.max_linear_speed * 4, -self.max_linear_speed * 4)
+        self.rotation_speed_limiter = SlewRateLimiter(self.max_angular_rate * 4, -self.max_angular_rate * 4)
 
     def configure_button_bindings_teleop(self):
         # Set the forward perspective of the robot for field oriented driving

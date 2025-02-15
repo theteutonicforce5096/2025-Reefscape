@@ -89,7 +89,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         Shuffleboard.getTab("Pose Estimation").add(f"Estimated Pose", self.field2d).withSize(4, 2)
 
         # Create AprilTag Field and robot length variable for pose transformation
-        self.april_tag_field = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
+        self.april_tag_field = AprilTagFieldLayout.loadField(AprilTagField.k2025ReefscapeWelded)
         self.robot_length = robot_length
         self.robot_distance_to_reef = robot_distance_to_reef
         self.robot_distance_to_coral = robot_distance_to_coral
@@ -303,7 +303,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         # Pull pose from pathplanner if set up
         # Since not yet set up or poses not set up based on driverstation
         # Use something random
-        return Pose2d(1.112, 4.039, radians(0))
+        return Pose2d(2.041, 4.021, radians(0))
         
     def add_limelight_vision_measurement(self, limelight_robot_pose: Pose2d, timestamp, 
                                          max_translation_difference, max_rotation_difference, std_devs):
