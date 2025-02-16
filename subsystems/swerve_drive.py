@@ -210,9 +210,9 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         self.limelight.set_robot_orientation(self.get_state_copy().pose.rotation().degrees())
 
         # Get robot pose from limelight if robot is not traveling faster than 50% max speed
-        forward_speed_over_tol = abs(self.get_state_copy().speeds.vx) > self.max_linear_speed * 0.5
-        strafe_speed_over_tol = abs(self.get_state_copy().speeds.vy) > self.max_linear_speed * 0.5
-        rotation_speed_over_tol = abs(self.get_state_copy().speeds.omega) > self.max_angular_rate * 0.5
+        forward_speed_over_tol = abs(self.get_state_copy().speeds.vx) > self.max_linear_speed * 0.25
+        strafe_speed_over_tol = abs(self.get_state_copy().speeds.vy) > self.max_linear_speed * 0.25
+        rotation_speed_over_tol = abs(self.get_state_copy().speeds.omega) > self.max_angular_rate * 0.25
         
         if forward_speed_over_tol or strafe_speed_over_tol or rotation_speed_over_tol:
             pass
@@ -221,7 +221,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
 
             # Add Limelight vision measurement to odometry
             self.add_limelight_vision_measurement(limelight_robot_pose, timestamp, 
-                                                1.0, 45.0, (1.0, 1.0, 1.0))
+                                                1.0, 45.0, (2.0, 2.0, 10.0))
             
         # Update odometry pose of robot in odometry Field 2d Widget
         self.field2d.setRobotPose(self.get_state_copy().pose)
