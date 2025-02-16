@@ -209,8 +209,12 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         # Set robot orientation in Limelight
         self.limelight.set_robot_orientation(self.get_state_copy().pose.rotation().degrees())
 
-        # Get robot pose from limelight
-        if abs(self.get_state_copy().speeds.omega) > self.max_angular_rate * 0.5:
+        # Get robot pose from limelight if robot is not traveling faster than 50% max speed
+        forward_speed_over_tol = abs(self.get_state_copy().speeds.vx) > self.max_linear_speed * 0.5
+        strafe_speed_over_tol = abs(self.get_state_copy().speeds.vy) > self.max_linear_speed * 0.5
+        rotation_speed_over_tol = abs(self.get_state_copy().speeds.omega) > self.max_angular_rate * 0.5
+        
+        if forward_speed_over_tol or strafe_speed_over_tol or rotation_speed_over_tol:
             pass
         else:
             limelight_robot_pose, timestamp = self.limelight.get_robot_pose()
@@ -301,10 +305,10 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         target_side = "Right" if right_side else "Left"
 
         # Return None if no AprilTag found otherwise get the pose of the AprilTag
-        if tag_id == None:
+        if tag_id == None or tag_id == -1:
             return None
         else:
-            tag_pose = self.april_tag_field.getTagPose(tag_id).toPose2d()
+            tag_pose = self.april_tag_field.getTagPose(int(tag_id)).toPose2d()
 
         # Get vector components for vector that translates robot from AprilTag pose to front bumper touching Reef
         # assuming robot is orientated straight

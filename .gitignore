@@ -3,4 +3,4 @@
 __pycache__/
 .pytest_cache/
 /*/__pycache__/
-/ctre_sim/
+ctre_sim/

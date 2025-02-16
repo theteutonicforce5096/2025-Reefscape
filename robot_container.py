@@ -9,7 +9,7 @@ from phoenix6 import SignalLogger
 
 from wpilib import DriverStation
 
-from wpimath.geometry import Pose2d, Transform2d
+from wpimath.geometry import Pose2d, Transform2d, Rotation2d
 
 from math import pi
 
@@ -20,6 +20,10 @@ class RobotContainer:
 
         # Initialize controller
         self.controller = commands2.button.CommandXboxController(0)
+        
+        # Max speed variables
+        self.max_linear_speed = SwerveDriveConstants.max_linear_speed
+        self.max_angular_rate = SwerveDriveConstants.max_angular_rate
 
     def configure_button_bindings_auto(self):
         # Set the starting pose of the robot
@@ -27,13 +31,22 @@ class RobotContainer:
         self.drivetrain.reset_pose(starting_pose)    
 
         if DriverStation.getAlliance() == DriverStation.Alliance.kBlue:
-            target_pose = self.drivetrain.get_state_copy().pose.transformBy(Transform2d(Pose2d(), Pose2d(-0.25, 0, 0)))
+            target_pose = self.drivetrain.get_state_copy().pose.transformBy(
+                Transform2d(Pose2d(), Pose2d(0.5, 0, 0))
+            )
         else: 
-            target_pose = self.drivetrain.get_state_copy().pose.transformBy(Transform2d(Pose2d(), Pose2d(0.25, 0, 0)))
+            target_pose = self.drivetrain.get_state_copy().pose.transformBy(
+                Transform2d(Pose2d(), Pose2d(0.5, 0, 0))
+            )
 
         AutoBuilder.pathfindToPose(
             target_pose,
-            PathConstraints(0.5, 1.0, 1.5, 3),
+            PathConstraints(
+                self.max_linear_speed * 0.10, 
+                self.max_linear_speed * 0.20, 
+                self.max_angular_rate * 0.10, 
+                self.max_angular_rate * 0.20
+            ),
             0.0,
         ).schedule()
 
@@ -47,8 +60,8 @@ class RobotContainer:
         self.drivetrain.setDefaultCommand(
             self.drivetrain.apply_request(
                 lambda: self.drivetrain.get_operator_drive_request(
-                    self.controller.getHID().getLeftTriggerAxis() > 0.1,
-                    self.controller.getHID().getRightTriggerAxis() > 0.1,
+                    self.controller.getLeftTriggerAxis() > 0.1,
+                    self.controller.getRightTriggerAxis() > 0.1,
                     self.controller.getLeftY(),
                     self.controller.getLeftX(),
                     self.controller.getRightX()
@@ -62,20 +75,34 @@ class RobotContainer:
         )
         
         self.controller.x().onTrue(
-            self.drivetrain.get_reef_alignment_command(
-                PathConstraints(1.0, 3.0, 1 * pi, 3 * pi),
-                0.0,
-                self.controller,
-                False
+            self.drivetrain.runOnce(
+                lambda: self.drivetrain.get_reef_alignment_command(
+                    PathConstraints(
+                        self.max_linear_speed * 0.20, 
+                        self.max_linear_speed * 0.60, 
+                        self.max_angular_rate * 0.20, 
+                        self.max_angular_rate * 0.60
+                    ),
+                    0.0,
+                    self.controller,
+                    False
+                ).schedule()
             )
         )
 
         self.controller.b().onTrue(
-            self.drivetrain.get_reef_alignment_command(
-                PathConstraints(1.0, 3.0, 1 * pi, 3 * pi),
-                0.0,
-                self.controller,
-                True
+            self.drivetrain.runOnce(
+                lambda: self.drivetrain.get_reef_alignment_command(
+                    PathConstraints(
+                        self.max_linear_speed * 0.20, 
+                        self.max_linear_speed * 0.60, 
+                        self.max_angular_rate * 0.20, 
+                        self.max_angular_rate * 0.60
+                    ),
+                    0.0,
+                    self.controller,
+                    True
+                ).schedule()
             )
         )
     

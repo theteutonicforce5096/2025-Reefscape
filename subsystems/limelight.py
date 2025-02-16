@@ -36,8 +36,7 @@ class Limelight:
         :param default_value: Value to return if no value is found.
         :type default_value: int
         """
-
-        return self.limelight_network_table.getEntry("tid").getInteger(default_value)
+        return self.limelight_network_table.getEntry("tid").getDouble(default_value)
 
     def set_robot_orientation(self, yaw):
         """
