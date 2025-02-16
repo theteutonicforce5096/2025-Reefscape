@@ -7,6 +7,8 @@ from wpilib.sysid import SysIdRoutineLog
 
 from phoenix6 import swerve, SignalLogger
 
+from wpimath.filter import SlewRateLimiter
+
 from robotpy_apriltag import AprilTagFieldLayout, AprilTagField
 
 from pathplannerlib.auto import AutoBuilder, RobotConfig, PathConstraints
@@ -27,7 +29,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
     """
 
     def __init__(self, drive_motor_type, steer_motor_type, encoder_type, drivetrain_constants, modules,
-                 robot_length, robot_distance_to_reef, robot_distance_to_coral):
+                 max_linear_speed, max_angular_rate, robot_length, robot_distance_to_reef, robot_distance_to_coral):
         """
         Constructs for initializing swerve drivetrain using the specified constants.
 
@@ -41,6 +43,10 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         :type drivetrain_constants: swerve.SwerveDrivetrainConstants
         :param modules: Constants for each specific module
         :type modules: list[swerve.SwerveModuleConstants]
+        :param max_linear_speed: Max linear speed of drivetrain in meters per second. 
+        :type max_linear_speed: float
+        :param max_angular_rate: Max angular velocity of drivetrain in radians per second. 
+        :type max_angular_rate: float
         :param robot_length: Length of the robot in meters.
         :type robot_length: float
         :param robot_distance_to_reef: Distance in meters the robot needs to be away from reef for alignment to Reef
@@ -60,6 +66,37 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         self.limelight = Limelight()
         self.limelight.set_limelight_network_table_entry_double("pipeline", 0)
         self.limelight.set_limelight_network_table_entry_double("imumode_set", 0)
+        
+        # Create max speeds variables
+        self.max_linear_speed = max_linear_speed
+        self.max_angular_rate = max_angular_rate
+
+        # Create request for controlling swerve drive
+        # https://www.chiefdelphi.com/t/motion-magic-velocity-control-for-drive-motors-in-phoenix6-swerve-drive-api/483669/6
+        self.default_mode_field_centric_request = (
+            swerve.requests.FieldCentric()
+            .with_forward_perspective(swerve.requests.ForwardPerspectiveValue.OPERATOR_PERSPECTIVE)
+            .with_drive_request_type(swerve.SwerveModule.DriveRequestType.VELOCITY)
+            .with_steer_request_type(swerve.SwerveModule.SteerRequestType.POSITION)
+            .with_deadband(self.max_linear_speed * 0.01)
+            .with_rotational_deadband(self.max_angular_rate * 0.01)
+            .with_desaturate_wheel_speeds(True)
+        )
+
+        self.slow_mode_field_centric_request = (
+            swerve.requests.FieldCentric()
+            .with_forward_perspective(swerve.requests.ForwardPerspectiveValue.OPERATOR_PERSPECTIVE)
+            .with_drive_request_type(swerve.SwerveModule.DriveRequestType.VELOCITY)
+            .with_steer_request_type(swerve.SwerveModule.SteerRequestType.POSITION)
+            .with_deadband(self.max_linear_speed * 0.001)
+            .with_rotational_deadband(self.max_angular_rate * 0.001)
+            .with_desaturate_wheel_speeds(True)
+        )
+
+        # Create slew rate limiters for limiting robot acceleration
+        self.straight_speed_limiter = SlewRateLimiter(self.max_linear_speed * 4, -self.max_linear_speed * 4)
+        self.strafe_speed_limiter = SlewRateLimiter(self.max_linear_speed * 4, -self.max_linear_speed * 4)
+        self.rotation_speed_limiter = SlewRateLimiter(self.max_angular_rate * 4, -self.max_angular_rate * 4)
 
         # Create Apply Robot Speeds Request for PathPlanner
         self.apply_robot_speeds_request = (
@@ -69,6 +106,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
             .with_desaturate_wheel_speeds(True)
         )
 
+        # Configure PathPlanner
         AutoBuilder.configure(
             lambda: self.get_state_copy().pose,
             self.reset_pose,
@@ -172,12 +210,15 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         self.limelight.set_robot_orientation(self.get_state_copy().pose.rotation().degrees())
 
         # Get robot pose from limelight
-        limelight_robot_pose, timestamp = self.limelight.get_robot_pose()
+        if abs(self.get_state_copy().speeds.omega) > self.max_angular_rate * 0.5:
+            pass
+        else:
+            limelight_robot_pose, timestamp = self.limelight.get_robot_pose()
 
-        # Add Limelight vision measurement to odometry
-        self.add_limelight_vision_measurement(limelight_robot_pose, timestamp, 
-                                              1.0, 45.0, (0.2, 0.2, 0.2))
-        
+            # Add Limelight vision measurement to odometry
+            self.add_limelight_vision_measurement(limelight_robot_pose, timestamp, 
+                                                1.0, 45.0, (1.0, 1.0, 1.0))
+            
         # Update odometry pose of robot in odometry Field 2d Widget
         self.field2d.setRobotPose(self.get_state_copy().pose)
 
@@ -191,8 +232,61 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         :rtype: Command
         """
         return self.run(lambda: self.set_control(request()))
+    
+    def reset_slew_rate_limiters(self):
+        """
+        Reset the slew rate limiters to the current speeds of the drivetrain.
+        """
+        self.straight_speed_limiter.reset(self.get_state_copy().speeds.vx)
+        self.strafe_speed_limiter.reset(self.get_state_copy().speeds.vy)
+        self.rotation_speed_limiter.reset(self.get_state_copy().speeds.omega)
+    
+    def get_operator_drive_request(self, left_trigger_pressed: bool, right_trigger_pressed: bool,
+                                   forward_speed: float, strafe_speed: float, rotation_speed: float):
+        """
+        Return the desired drive request of the operator.
 
-    def calculate_reef_alignment_pose(self, right_side):
+        :param left_trigger_pressed: Whether the left trigger of the operator's controller is pressed or not.
+        :type left_trigger_pressed: bool
+        :param right_trigger_pressed: Whether the right trigger of the operator's controller is pressed or not.
+        :type right_trigger_pressed: bool
+        :param forward_speed: Desired forward speed of the operator in terms of percent of max linear speed where forward is positive. 
+        :type forward_speed: float
+        :param strafe_speed: Desired strafe speed of the operator in terms of percent of max linear speed where right is positive. 
+        :type strafe_speed: float
+        :param rotation_speed: Desired rotation speed of the operator in terms of percent of max angular speed where clockwise is positive. 
+        :type rotation_speed: float
+        """
+        if left_trigger_pressed and right_trigger_pressed:
+            return self.slow_mode_field_centric_request.with_velocity_x(
+                self.straight_speed_limiter.calculate(
+                    -(forward_speed * abs(forward_speed ** 2)) * self.max_linear_speed
+                )
+            ).with_velocity_y(
+                self.strafe_speed_limiter.calculate(
+                    -(strafe_speed * abs(strafe_speed ** 2)) * self.max_linear_speed
+                )
+            ).with_rotational_rate(
+                self.rotation_speed_limiter.calculate(
+                    -(rotation_speed * abs(rotation_speed ** 2)) * self.max_angular_rate
+                )
+            )
+        else:
+            return self.default_mode_field_centric_request.with_velocity_x(
+                self.straight_speed_limiter.calculate(
+                    -(forward_speed * abs(forward_speed)) * self.max_linear_speed
+                )
+            ).with_velocity_y(
+                self.strafe_speed_limiter.calculate(
+                    -(strafe_speed * abs(strafe_speed)) * self.max_linear_speed
+                )
+            ).with_rotational_rate(
+                self.rotation_speed_limiter.calculate(
+                    -(rotation_speed * abs(rotation_speed)) * self.max_angular_rate
+                )
+            )
+
+    def calculate_reef_alignment_pose(self, right_side: bool):
         """
         Return the pose that the robot should target to the Reef that is the closest to its current position
         on either the left or right side of an AprilTag on the Reef.
@@ -205,7 +299,6 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         # Get the ID of the primary in-view AprilTag and get target side for alignment.
         tag_id = self.limelight.get_primary_apriltag_id(None)
         target_side = "Right" if right_side else "Left"
-        print(tag_id)
 
         # Return None if no AprilTag found otherwise get the pose of the AprilTag
         if tag_id == None:
@@ -334,11 +427,29 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         """
         Get the initial pose that the robot should be at on the field when a match starts.
         """
+        # Pull pose from pathplanner if auto paths set up
+        # Pulling pose based on driverstation for now
+        alliance = DriverStation.getAlliance()
+        driver_station_number =  DriverStation.getLocation()
+        
+        if alliance == DriverStation.Alliance.kBlue:
+            alliance = "Blue"
+        else:
+            alliance = "Red"
+            
+        if driver_station_number == 0:
+            driver_station_number == 2
 
-        # Pull pose from pathplanner if set up
-        # Since not yet set up or poses not set up based on driverstation
-        # Use something random
-        return Pose2d(2.041, 4.021, radians(0))
+        starting_poses = {
+            "Blue_1": Pose2d(7.175, 6.162, Rotation2d.fromDegrees(180.000)),
+            "Blue_2": Pose2d(7.175, 4.054, Rotation2d.fromDegrees(180.000)),
+            "Blue_3": Pose2d(7.175, 1.889, Rotation2d.fromDegrees(180.000)),
+            "Red_1": Pose2d(10.375, 1.894, Rotation2d.fromDegrees(0.000)),
+            "Red_2": Pose2d(10.375, 4.047, Rotation2d.fromDegrees(0.000)),
+            "Red_3": Pose2d(10.375, 6.162, Rotation2d.fromDegrees(0.000)),
+        }
+
+        return starting_poses[f"{alliance}_{driver_station_number}"]
         
     def add_limelight_vision_measurement(self, limelight_robot_pose: Pose2d, timestamp, 
                                          max_translation_difference, max_rotation_difference, std_devs):
@@ -360,7 +471,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         (x position in meters, y position in meters, and heading in radians).
         :type std_devs: tuple[float, float, float]
         """
-
+    
         # Don't try to add vision measurement if limelight robot pose or timestamp is None
         if limelight_robot_pose == None or timestamp == None:
             pass

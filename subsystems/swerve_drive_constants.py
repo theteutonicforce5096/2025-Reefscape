@@ -8,6 +8,15 @@ class SwerveDriveConstants:
     https://v6.docs.ctr-electronics.com/en/stable/docs/tuner/tuner-swerve/index.html
     """
 
+    # Max speeds of drivetrain
+    max_linear_speed = 5.63 # Max linear speed in meters per second
+    max_angular_rate = 15.27 # Max angular velocity in radians per second 
+
+    # Variables for alignment to speaker
+    robot_length = 0.832 # Length of the robot in meters
+    robot_distance_to_reef = 0.0 # Distance in meters the robot needs to be away from reef for alignment to Reef
+    robot_distance_to_coral = 0.1651 # Distance in meters the robot needs to move from AprilTag to coral post on either side
+
     # The steer motor uses any SwerveModule.SteerRequestType control request with the
     # output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
     # Position Control
@@ -215,14 +224,9 @@ class SwerveDriveConstants:
     )
 
     @classmethod
-    def create_drivetrain(clazz, robot_length, robot_distance_to_reef, robot_distance_to_coral) -> SwerveDrive:
+    def create_drivetrain(clazz) -> SwerveDrive:
         """
         Creates a SwerveDrive instance.
-
-        :param robot_length: Length of the robot in meters.
-        :type robot_length: float
-        :param robot_distance_to_reef: Distance in meters the robot needs to be away from reef for alignment to Reef
-        :type robot_distance_to_reef: float
         """
 
         return SwerveDrive(
@@ -236,7 +240,9 @@ class SwerveDriveConstants:
                 clazz.back_left,
                 clazz.back_right,
             ],
-            robot_length,
-            robot_distance_to_reef,
-            robot_distance_to_coral
+            clazz.max_linear_speed,
+            clazz.max_angular_rate,
+            clazz.robot_length,
+            clazz.robot_distance_to_reef,
+            clazz.robot_distance_to_coral
         )
