@@ -1,6 +1,6 @@
-__pycache__/
 .DS_Store
 .vscode/
+__pycache__/
 .pytest_cache/
 /*/__pycache__/
 /ctre_sim/

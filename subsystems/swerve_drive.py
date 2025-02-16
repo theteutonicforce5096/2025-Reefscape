@@ -437,8 +437,8 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         else:
             alliance = "Red"
             
-        if driver_station_number == 0:
-            driver_station_number == 2
+        if driver_station_number == 0 or driver_station_number == None:
+            driver_station_number = 2
 
         starting_poses = {
             "Blue_1": Pose2d(7.175, 6.162, Rotation2d.fromDegrees(180.000)),
