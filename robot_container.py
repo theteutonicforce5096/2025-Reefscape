@@ -3,9 +3,13 @@ from commands2.sysid import SysIdRoutine
 
 from subsystems.swerve_drive_constants import SwerveDriveConstants
 
-from pathplannerlib.auto import PathConstraints
+from pathplannerlib.auto import AutoBuilder, PathConstraints
 
 from phoenix6 import SignalLogger
+
+from wpilib import DriverStation
+
+from wpimath.geometry import Pose2d, Transform2d
 
 from math import pi
 
@@ -21,6 +25,17 @@ class RobotContainer:
         # Set the starting pose of the robot
         starting_pose = self.drivetrain.get_starting_position()
         self.drivetrain.reset_pose(starting_pose)    
+
+        if DriverStation.getAlliance() == DriverStation.Alliance.kBlue:
+            target_pose = self.drivetrain.get_state_copy().pose.transformBy(Transform2d(Pose2d(), Pose2d(-0.25, 0, 0)))
+        else: 
+            target_pose = self.drivetrain.get_state_copy().pose.transformBy(Transform2d(Pose2d(), Pose2d(0.25, 0, 0)))
+
+        AutoBuilder.pathfindToPose(
+            target_pose,
+            PathConstraints(0.5, 1.0, 1.5, 3),
+            0.0,
+        ).schedule()
 
     def configure_button_bindings_teleop(self):
         # Set the forward perspective of the robot for field oriented driving
