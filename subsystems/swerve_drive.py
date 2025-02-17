@@ -88,8 +88,8 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
             .with_forward_perspective(swerve.requests.ForwardPerspectiveValue.OPERATOR_PERSPECTIVE)
             .with_drive_request_type(swerve.SwerveModule.DriveRequestType.VELOCITY)
             .with_steer_request_type(swerve.SwerveModule.SteerRequestType.POSITION)
-            .with_deadband(self.max_linear_speed * 0.001)
-            .with_rotational_deadband(self.max_angular_rate * 0.001)
+            .with_deadband(self.max_linear_speed * 0.005)
+            .with_rotational_deadband(self.max_angular_rate * 0.005)
             .with_desaturate_wheel_speeds(True)
         )
 
@@ -162,7 +162,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         self.sys_id_routine_steer = SysIdRoutine(
             SysIdRoutine.Config(
                 rampRate = 1.0,
-                stepVoltage = 7.0,
+                stepVoltage = 4.0,
                 timeout = 5.0,
                 recordState = lambda state: SignalLogger.write_string(
                     "SysId_Steer_State", SysIdRoutineLog.stateEnumToString(state)
@@ -178,7 +178,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         self.sys_id_routine_rotation = SysIdRoutine(
             SysIdRoutine.Config(
                 rampRate = pi / 6,
-                stepVoltage = 7.0,
+                stepVoltage = 4.0,
                 timeout = 5.0,
                 recordState = lambda state: SignalLogger.write_string(
                     "SysId_Rotation_State", SysIdRoutineLog.stateEnumToString(state)
@@ -206,24 +206,34 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         Periodically called by CommandScheduler for updating drivetrain state.
         """
 
-        # Set robot orientation in Limelight
-        self.limelight.set_robot_orientation(self.get_state_copy().pose.rotation().degrees())
+        # Get current state of the drivetrain
+        current_state = self.get_state_copy()
 
-        # Get robot pose from limelight if robot is not traveling faster than 50% max speed
-        forward_speed_over_tol = abs(self.get_state_copy().speeds.vx) > self.max_linear_speed * 0.25
-        strafe_speed_over_tol = abs(self.get_state_copy().speeds.vy) > self.max_linear_speed * 0.25
-        rotation_speed_over_tol = abs(self.get_state_copy().speeds.omega) > self.max_angular_rate * 0.25
+        # Set robot orientation in Limelight
+        self.limelight.set_robot_orientation(current_state.pose.rotation().degrees())
+
+        # Check if robot is not traveling faster than 25% max speed
+        forward_speed_over_vision_tol = abs(current_state.speeds.vx) > self.max_linear_speed * 0.20
+        strafe_speed_over_vision_tol = abs(current_state.speeds.vy) > self.max_linear_speed * 0.20
+        rotation_speed_over_vision_tol = abs(current_state.speeds.omega) > self.max_angular_rate * 0.20
         
-        if forward_speed_over_tol or strafe_speed_over_tol or rotation_speed_over_tol:
+        # Get robot pose from limelight if robot is not traveling faster than 25% max speed
+        if forward_speed_over_vision_tol or strafe_speed_over_vision_tol or rotation_speed_over_vision_tol:
             pass
         else:
             limelight_robot_pose, timestamp = self.limelight.get_robot_pose()
 
-            # Add Limelight vision measurement to odometry
-            self.add_limelight_vision_measurement(limelight_robot_pose, timestamp, 
-                                                1.0, 45.0, (2.0, 2.0, 10.0))
+            # Add Limelight vision measurement to odometry if pose or timestamp is not None
+            if limelight_robot_pose == None or timestamp == None:
+                pass
+            else:
+                self.add_vision_measurement(
+                    limelight_robot_pose,
+                    timestamp,
+                    (0.5, 0.5, 5.0) # Conservative: (2.0, 2.0, 10.0)
+                )
             
-        # Update odometry pose of robot in odometry Field 2d Widget
+        # Update odometry pose of robot in Field 2d Widget
         self.field2d.setRobotPose(self.get_state_copy().pose)
 
     def apply_request(self, request):
@@ -241,9 +251,14 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         """
         Reset the slew rate limiters to the current speeds of the drivetrain.
         """
-        self.straight_speed_limiter.reset(self.get_state_copy().speeds.vx)
-        self.strafe_speed_limiter.reset(self.get_state_copy().speeds.vy)
-        self.rotation_speed_limiter.reset(self.get_state_copy().speeds.omega)
+
+        # Get current state of the drivetrain
+        current_state = self.get_state_copy()
+
+        # Reset slew rate limiters to current speed of the drivetrain
+        self.straight_speed_limiter.reset(current_state.speeds.vx)
+        self.strafe_speed_limiter.reset(current_state.speeds.vy)
+        self.rotation_speed_limiter.reset(current_state.speeds.omega)
     
     def get_operator_drive_request(self, left_trigger_pressed: bool, right_trigger_pressed: bool,
                                    forward_speed: float, strafe_speed: float, rotation_speed: float):
@@ -261,18 +276,19 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         :param rotation_speed: Desired rotation speed of the operator in terms of percent of max angular speed where clockwise is positive. 
         :type rotation_speed: float
         """
+
         if left_trigger_pressed and right_trigger_pressed:
             return self.slow_mode_field_centric_request.with_velocity_x(
                 self.straight_speed_limiter.calculate(
-                    -(forward_speed * abs(forward_speed ** 2)) * self.max_linear_speed
+                    -(forward_speed * abs(forward_speed * 0.5)) * self.max_linear_speed
                 )
             ).with_velocity_y(
                 self.strafe_speed_limiter.calculate(
-                    -(strafe_speed * abs(strafe_speed ** 2)) * self.max_linear_speed
+                    -(strafe_speed * abs(strafe_speed * 0.5)) * self.max_linear_speed
                 )
             ).with_rotational_rate(
                 self.rotation_speed_limiter.calculate(
-                    -(rotation_speed * abs(rotation_speed ** 2)) * self.max_angular_rate
+                    -(rotation_speed * abs(rotation_speed * 0.5)) * self.max_angular_rate
                 )
             )
         else:
@@ -431,6 +447,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         """
         Get the initial pose that the robot should be at on the field when a match starts.
         """
+
         # Pull pose from pathplanner if auto paths set up
         # Pulling pose based on driverstation for now
         alliance = DriverStation.getAlliance()
@@ -454,48 +471,6 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         }
 
         return starting_poses[f"{alliance}_{driver_station_number}"]
-        
-    def add_limelight_vision_measurement(self, limelight_robot_pose: Pose2d, timestamp, 
-                                         max_translation_difference, max_rotation_difference, std_devs):
-        """
-        Add limelight vision measurement to odometry if valid and within a certain degree
-        of current measurement to avoid bad vision data.
-
-        :param limelight_robot_pose: Pose estimation of the robot from Limelight.
-        :type limelight_robot_pose: Pose2d
-        :param timestamp: Timestamp of the pose estimation
-        :type timestamp: second
-        :param max_translation_difference: Max translation difference between current pose reported by odometry 
-        and Limelight pose that is accepted.
-        :type max_translation_difference: meter
-        :param max_rotation_difference: Max rotation difference between current pose reported by odometry 
-        and Limelight pose that is accepted.
-        :type max_rotation_difference: degree
-        :param std_devs: Standard deviations of the robot pose measurement 
-        (x position in meters, y position in meters, and heading in radians).
-        :type std_devs: tuple[float, float, float]
-        """
-    
-        # Don't try to add vision measurement if limelight robot pose or timestamp is None
-        if limelight_robot_pose == None or timestamp == None:
-            pass
-        else:
-            odometry_robot_pose = self.get_state_copy().pose
-
-            # Calculate translation and rotation distance between the two poses
-            translation_robot_pose_distance = odometry_robot_pose.translation().distance(limelight_robot_pose.translation())
-            rotation_robot_pose_distance = abs(
-                odometry_robot_pose.rotation().degrees() - limelight_robot_pose.rotation().degrees()
-            )
-
-            # Only add vision measurement if limelight robot pose is within 
-            # 1 meter translation and 90 degrees rotation of odometry robot pose
-            if translation_robot_pose_distance <= max_translation_difference and rotation_robot_pose_distance <= max_rotation_difference:
-                self.add_vision_measurement(
-                    limelight_robot_pose,
-                    timestamp,
-                    std_devs
-                )
 
     def set_sys_id_routine(self):
         """
