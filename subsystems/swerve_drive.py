@@ -212,26 +212,34 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         # Set robot orientation in Limelight
         self.limelight.set_robot_orientation(current_state.pose.rotation().degrees())
 
-        # Check if robot is not traveling faster than 25% max speed
-        forward_speed_over_vision_tol = abs(current_state.speeds.vx) > self.max_linear_speed * 0.20
-        strafe_speed_over_vision_tol = abs(current_state.speeds.vy) > self.max_linear_speed * 0.20
-        rotation_speed_over_vision_tol = abs(current_state.speeds.omega) > self.max_angular_rate * 0.20
+        # Get speed of robot in terms of percent of max speed
+        forward_speed = (abs(current_state.speeds.vx) / self.max_linear_speed) * 100
+        strafe_speed = (abs(current_state.speeds.vy) / self.max_linear_speed) * 100
+        rotation_speed = (abs(current_state.speeds.omega) / self.max_angular_rate) * 100
+
+        # Get highest speed in terms of percent of max speed
+        highest_speed = max(forward_speed, strafe_speed, rotation_speed)
         
-        # Get robot pose from limelight if robot is not traveling faster than 25% max speed
-        if forward_speed_over_vision_tol or strafe_speed_over_vision_tol or rotation_speed_over_vision_tol:
+        limelight_robot_pose, timestamp = self.limelight.get_robot_pose()
+
+        # Add Limelight vision measurement to odometry if pose or timestamp is not None
+        if limelight_robot_pose == None or timestamp == None:
             pass
         else:
-            limelight_robot_pose, timestamp = self.limelight.get_robot_pose()
+            # if highest_speed > 50:
+            #     std_devs = (1000, 1000, 10000)
+            # elif 25 < highest_speed <= 50:
+            #     std_devs = (5, 0.5, 5)
+            # elif 12.5 < highest_speed <= 25:
+            #     std_devs = (1.0, 1.0, 10)
+            # elif highest_speed <= 12.5:
+            #     std_devs = (0.5, 0.5, 5)
 
-            # Add Limelight vision measurement to odometry if pose or timestamp is not None
-            if limelight_robot_pose == None or timestamp == None:
-                pass
-            else:
-                self.add_vision_measurement(
-                    limelight_robot_pose,
-                    timestamp,
-                    (0.5, 0.5, 5.0) # Conservative: (2.0, 2.0, 10.0)
-                )
+            self.add_vision_measurement(
+                limelight_robot_pose,
+                timestamp,
+                (0.5, 0.5, 5.0) # Conservative: (2.0, 2.0, 10.0)
+            )
             
         # Update odometry pose of robot in Field 2d Widget
         self.field2d.setRobotPose(self.get_state_copy().pose)
