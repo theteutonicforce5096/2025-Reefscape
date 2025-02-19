@@ -14,7 +14,6 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
 
     def autonomousInit(self):
         commands2.CommandScheduler.getInstance().cancelAll()
-        self.container.configure_button_bindings_auto()
 
     def autonomousPeriodic(self):
         pass

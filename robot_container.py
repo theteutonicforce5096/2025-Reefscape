@@ -25,32 +25,10 @@ class RobotContainer:
         self.max_linear_speed = SwerveDriveConstants.max_linear_speed
         self.max_angular_rate = SwerveDriveConstants.max_angular_rate
 
-    def configure_button_bindings_auto(self):
-        # Set the starting pose of the robot
+    def configure_button_bindings_teleop(self):
         starting_pose = self.drivetrain.get_starting_position()
         self.drivetrain.reset_pose(starting_pose)    
-
-        if DriverStation.getAlliance() == DriverStation.Alliance.kBlue:
-            target_pose = self.drivetrain.get_state_copy().pose.transformBy(
-                Transform2d(Pose2d(), Pose2d(0.5, 0, 0))
-            )
-        else: 
-            target_pose = self.drivetrain.get_state_copy().pose.transformBy(
-                Transform2d(Pose2d(), Pose2d(0.5, 0, 0))
-            )
-
-        AutoBuilder.pathfindToPose(
-            target_pose,
-            PathConstraints(
-                self.max_linear_speed * 0.10, 
-                self.max_linear_speed * 0.20, 
-                self.max_angular_rate * 0.10, 
-                self.max_angular_rate * 0.20
-            ),
-            0.0,
-        ).schedule()
-
-    def configure_button_bindings_teleop(self):
+            
         # Set the forward perspective of the robot for field oriented driving
         self.drivetrain.set_forward_perspective()
 
@@ -78,10 +56,10 @@ class RobotContainer:
             self.drivetrain.runOnce(
                 lambda: self.drivetrain.get_reef_alignment_command(
                     PathConstraints(
-                        self.max_linear_speed * 0.20, 
-                        self.max_linear_speed * 0.60, 
-                        self.max_angular_rate * 0.20, 
-                        self.max_angular_rate * 0.60
+                        self.max_linear_speed * 0.10, 
+                        self.max_linear_speed * 1, 
+                        self.max_angular_rate * 0.10, 
+                        self.max_angular_rate * 1
                     ),
                     0.0,
                     self.controller,

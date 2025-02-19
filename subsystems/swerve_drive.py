@@ -108,9 +108,9 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
 
         # Configure PathPlanner
         AutoBuilder.configure(
-            lambda: self.get_state_copy().pose,
+            lambda: self.get_state().pose,
             self.reset_pose,
-            lambda: self.get_state_copy().speeds,
+            lambda: self.get_state().speeds,
             lambda speeds, feedforwards: self.set_control(
                 self.apply_robot_speeds_request
                 .with_speeds(speeds)
@@ -207,7 +207,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         """
 
         # Get current state of the drivetrain
-        current_state = self.get_state_copy()
+        current_state = self.get_state()
 
         # Set robot orientation in Limelight
         self.limelight.set_robot_orientation(current_state.pose.rotation().degrees())
@@ -226,23 +226,23 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         if limelight_robot_pose == None or timestamp == None:
             pass
         else:
-            # if highest_speed > 50:
-            #     std_devs = (1000, 1000, 10000)
-            # elif 25 < highest_speed <= 50:
-            #     std_devs = (5, 0.5, 5)
-            # elif 12.5 < highest_speed <= 25:
-            #     std_devs = (1.0, 1.0, 10)
-            # elif highest_speed <= 12.5:
-            #     std_devs = (0.5, 0.5, 5)
+            if highest_speed > 50:
+                std_devs = (100.0, 100.0, 1000.0)
+            elif 25 < highest_speed <= 50:
+                std_devs = (10.0, 10.0, 100.0)
+            elif 12.5 < highest_speed <= 25:
+                std_devs = (1.0, 1.0, 10.0)
+            elif highest_speed <= 12.5:
+                std_devs = (0.5, 0.5, 5.0)
 
             self.add_vision_measurement(
                 limelight_robot_pose,
                 timestamp,
-                (0.5, 0.5, 5.0) # Conservative: (2.0, 2.0, 10.0)
+                std_devs
             )
             
         # Update odometry pose of robot in Field 2d Widget
-        self.field2d.setRobotPose(self.get_state_copy().pose)
+        self.field2d.setRobotPose(self.get_state().pose)
 
     def apply_request(self, request):
         """
@@ -261,7 +261,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         """
 
         # Get current state of the drivetrain
-        current_state = self.get_state_copy()
+        current_state = self.get_state()
 
         # Reset slew rate limiters to current speed of the drivetrain
         self.straight_speed_limiter.reset(current_state.speeds.vx)
@@ -350,15 +350,15 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
             if target_side == "Left":
                 transform_robot_left_or_right = Transform2d(Pose2d(), Pose2d(x_component_coral, y_component_coral, 0))
             else:
-                transform_robot_left_or_right = Transform2d(Pose2d(), Pose2d(x_component_coral -y_component_coral, 0))
+                transform_robot_left_or_right = Transform2d(Pose2d(), Pose2d(x_component_coral, -y_component_coral, 0))
 
             return tag_pose.transformBy(transform_front_bumper_to_reef).transformBy(transform_robot_left_or_right)
         elif tag_id in [21, 7]:    
             transform_front_bumper_to_reef = Transform2d(Pose2d(), Pose2d(x_component_reef, y_component_reef, radians(180)))
             if target_side == "Left":
-                transform_robot_left_or_right = Transform2d(Pose2d(), Pose2d(x_component_coral, -y_component_coral, 0))
-            else:
                 transform_robot_left_or_right = Transform2d(Pose2d(), Pose2d(x_component_coral, y_component_coral, 0))
+            else:
+                transform_robot_left_or_right = Transform2d(Pose2d(), Pose2d(x_component_coral, -y_component_coral, 0))
 
             return tag_pose.transformBy(transform_front_bumper_to_reef).transformBy(transform_robot_left_or_right)
         else:
