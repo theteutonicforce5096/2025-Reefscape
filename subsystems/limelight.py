@@ -6,12 +6,12 @@ from wpimath.geometry import Pose2d, Rotation2d
 
 class Limelight:
     """
-    Class for controlling Limelight.
+    Class for accessing Limelight network table.
     """
 
     def __init__(self):
         """
-        Constructor for controlling Limelight.
+        Constructor for accessing Limelight network table.
         """
         
         # Get Limelight's network table

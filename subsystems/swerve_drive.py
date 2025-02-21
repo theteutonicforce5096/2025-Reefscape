@@ -16,6 +16,7 @@ from pathplannerlib.auto import AutoBuilder, RobotConfig, PathConstraints
 from pathplannerlib.controller import PIDConstants, PPHolonomicDriveController
 
 from subsystems.limelight import Limelight
+from subsystems.telemetry import Telemetry
 
 from wpilib.shuffleboard import Shuffleboard
 from wpilib import DriverStation, Field2d, SendableChooser
@@ -31,7 +32,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
     def __init__(self, drive_motor_type, steer_motor_type, encoder_type, drivetrain_constants, modules,
                  max_linear_speed, max_angular_rate, robot_length, robot_distance_to_reef, robot_distance_to_coral):
         """
-        Constructs for initializing swerve drivetrain using the specified constants.
+        Constructor for initializing swerve drivetrain using the specified constants.
 
         :param drive_motor_type: Type of the drive motor
         :type drive_motor_type: type
@@ -62,10 +63,16 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         swerve.SwerveDrivetrain.__init__(self, drive_motor_type, steer_motor_type, encoder_type, 
                                          drivetrain_constants, modules)
         
-        # Initialize Limelight and configure default values
+        # Create Limelight instance and configure default values
         self.limelight = Limelight()
         self.limelight.set_limelight_network_table_entry_double("pipeline", 0)
         self.limelight.set_limelight_network_table_entry_double("imumode_set", 0)
+
+        # Register telemtry
+        self.logger = Telemetry()
+        self.register_telemetry(
+            lambda state: self.logger.telemeterize(state)
+        )
         
         # Create max speeds variables
         self.max_linear_speed = max_linear_speed

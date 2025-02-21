@@ -3,13 +3,9 @@ from commands2.sysid import SysIdRoutine
 
 from subsystems.swerve_drive_constants import SwerveDriveConstants
 
-from pathplannerlib.auto import AutoBuilder, PathConstraints
+from pathplannerlib.auto import PathConstraints
 
 from phoenix6 import SignalLogger
-
-from wpilib import DriverStation
-
-from wpimath.geometry import Pose2d, Transform2d, Rotation2d
 
 from math import pi
 
