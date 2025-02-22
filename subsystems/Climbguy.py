@@ -6,45 +6,68 @@ import wpimath.units
 import robot
 from wpilib import PWMSparkMax
 from wpilib import Timer
-
+import rev
 
 class climb_mechanism:
 
-    def __init__(self):
+    def __init__(self, left_servo:wpilib.Servo, right_servo:wpilib.Servo, encoderDude:wpilib.DutyCycleEncoder, left_motor:rev.SparkMax, right_motor:rev.SparkMax):
         
         
         # Initializing Servos
-        self.andyMark = wpilib.Servo(0)
-        self.andyMark1 = wpilib.Servo(2)
+        # self.andyMark = wpilib.Servo(0)
+        # self.andyMark1 = wpilib.Servo(1)
         
+        # Initializing andyMarks
         # The andyMark expects pulse widths between 1000 µs and 2000 µs
-        self.andyMark.setBounds(
-            max=2500, deadbandMax=1500, center=1500, deadbandMin=1500, min=500
-        )
-        self.andyMark1.setBounds(
-            max=2500, deadbandMax=1500, center=1500, deadbandMin=1500, min=500
-        )
+        # self.andyMark.setBounds(
+        #     max=2500, deadbandMax=1500, center=1500, deadbandMin=1500, min=500
+        # )
+        # self.andyMark1.setBounds(
+        #     max=2500, deadbandMax=1500, center=1500, deadbandMin=1500, min=500
+        # )
         
-        
-        self.ratchetPosition = 0.25
-        # BETWEEN 40 AND 25 !!!
+        self.__engageRatchet__()
 
-        # Initializing Motor
-        self.neo_motor = wpilib.PWMSparkMax(1)
-        self.neo_motor.set(0.0)
-        self.neo_motor.setExpiration(3.0)
-        self.neo_motor.setSafetyEnabled(False)
+        # Initializing encoder
+        # self.encoderDude = wpilib.DutyCycleEncoder(0)
+        # self.encoderDude.setAssumedFrequency(wpimath.units.hertz (975.6))
+        # self.encoderDude.setDutyCycleRange(min = 1/1025, max = 1024/1025)
+        # self.encoderDude.setInverted(True)
+       
+        # BETWEEN 40 AND 25 !!
+        # Arm in up position: 0.080
+        # Arm in climb position: 0.33
+
+        # # Initializing Motor
+        # self.ClimberMotorLeft = rev.SparkMax(1, rev.SparkMax.MotorType.kBrushless)
+        # self.ClimberMotorLeft.set(0.0)
+        # # self.ClimberMotorLeft.setExpiration(3.0)
+        # # self.ClimberMotorLeft.setSafetyEnabled(False)
+        # ClimbMotorLeftConfig = rev.SparkBaseConfig()
+        # ClimbMotorLeftConfig.inverted(True)
+        # self.ClimberMotorLeft.configure(ClimbMotorLeftConfig, rev.SparkMax.ResetMode.kNoResetSafeParameters, rev.SparkMax.PersistMode.kNoPersistParameters)
+
         
-        # Initializing Other Motor
-        self.neo_motor1 = wpilib.PWMSparkMax(3)
-        self.neo_motor1.set(0.0)
-        self.neo_motor1.setExpiration(3.0)
-        self.neo_motor1.setSafetyEnabled(False)
+
+        
+        # # Initializing Other Motor
+        # self.ClimberMotorRight = rev.SparkMax(2, rev.SparkMax.MotorType.kBrushless)
+        # self.ClimberMotorRight.set(0.0)
+        # # self.ClimberMotorRight.setExpiration(3.0)
+        # # self.ClimberMotorRight.setSafetyEnabled(False)
+        # self.config = rev.SparkBaseConfig()
+        # self.config.follow(1)
+        # self.ClimberMotorRight.configure(self.config, rev.SparkMax.ResetMode.kResetSafeParameters, rev.SparkMax.PersistMode.kNoPersistParameters)
+
+        
+        
         
         # Initialize timers
         self.climb_timer = wpilib.Timer()
         self.ratchet_timer = wpilib.Timer()
         self.motor_reset_timer = wpilib.Timer()
+
+        
         
 
 
@@ -94,11 +117,11 @@ class climb_mechanism:
 
     def climb(self):
         # when it activates the climb thing and turns the servo to latch in the 3d printed thing
-        self.__engageRatchet__()
-        self.neo_motor.set(.12)
-        self.neo_motor1.set(.12)
-        self.climb_timer.restart()
+        self.ClimberMotorLeft.set(.12)
+     
         
+        
+      
             
     def reset(self):
         # if you dont know what reset is, go back to ,middle school
@@ -109,12 +132,15 @@ class climb_mechanism:
     def periodic(self):
         
         # CLIMBING #
-        
-        if self.climb_timer.isRunning() and self.climb_timer.hasElapsed(2):
-            self.neo_motor.set(0)
-            self.neo_motor1.set(0)
-            self.climb_timer.stop()
-            print("yippie")
+        if self.ClimberMotorLeft.get() >= 0.01:
+            if self.encoderDude.get() >= 0.33:
+                self.ClimberMotorLeft.set(0.0)
+
+        # if self.climb_timer.isRunning() and self.climb_timer.hasElapsed(2):
+        #     self.ClimberMotorLeft.set(0)
+        #     self.ClimberMotorRight.set(0)
+        #     self.climb_timer.stop()
+        #     print("yippie")
                 
        
        # RESET #
@@ -122,18 +148,17 @@ class climb_mechanism:
         if self.ratchet_timer.isRunning():
             if self.ratchet_timer.hasElapsed(2):
                 self.ratchet_timer.stop()
-                self.neo_motor.set(-.08)
-                self.neo_motor1.set(-.08)
-                self.motor_reset_timer.restart()
+                self.ClimberMotorLeft.set(-.08)
+                
        
        
-        if self.motor_reset_timer.isRunning():
-            if self.motor_reset_timer.hasElapsed(2):
-                self.neo_motor.set(0)
-                self.neo_motor1.set(0)
-                self.motor_reset_timer.stop()
+        if self.ClimberMotorLeft.get() <= -0.01:
+            if self.encoderDude.get() <= 0.08:
+                self.ClimberMotorLeft.set(0.0)
                 self.__engageRatchet__()
                 print("IT HAS SUCCESSFULLY RESET!!!!")
+
+        
         
             
         
