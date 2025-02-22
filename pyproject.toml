@@ -3,8 +3,7 @@
 # on your RoboRIO
 #
 
-[tool.robotpy.pyfrc]
-isolated = true
+[tool.robotpy]
 
 # Version of robotpy this project depends on
 robotpy_version = "2025.3.1.1"
@@ -21,7 +20,7 @@ robotpy_extras = [
     # "phoenix5",
     "phoenix6",
     # "playingwithfusion",
-    # "rev"
+    "rev"
     # "romi",
     # "sim",
     # "xrp",
