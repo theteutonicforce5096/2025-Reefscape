@@ -11,7 +11,7 @@ class Elevator(Subsystem):
             .voltageCompensation(12.0)
             .setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
             .smartCurrentLimit(20) # 20-40 recommended
-            .inverted(False)
+            .inverted(False) # inverted is CL, regular is CCL
         )
         
         self.motor.configure(
@@ -19,7 +19,29 @@ class Elevator(Subsystem):
             rev.SparkBase.ResetMode.kResetSafeParameters,
             rev.SparkBase.PersistMode.kNoPersistParameters
         )
-                
+
+    def configure_motor(self, inverted):
+        motor_config = (
+            rev.SparkMaxConfig()
+            .voltageCompensation(12.0)
+            .setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
+            .smartCurrentLimit(20) # 20-40 recommended
+            .inverted(inverted) # inverted is CL, regular is CCL
+        )
+
+        self.motor.configure(
+            motor_config, 
+            rev.SparkBase.ResetMode.kResetSafeParameters,
+            rev.SparkBase.PersistMode.kNoPersistParameters
+        )
+
     def spin_motor(self, percent):
+        self.motor.set(0)
+        self.configure_motor(False)
+        self.motor.set(percent)
+
+    def spin_motor_reverse(self, percent):
+        self.motor.set(0)
+        self.configure_motor(True)
         self.motor.set(percent)
         

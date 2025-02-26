@@ -17,7 +17,7 @@ class RobotContainer:
         self.elevator = Elevator(1)
 
         # # Initialize controller
-        self.controller = commands2.button.CommandXboxController(0)
+        self.controller = commands2.button.CommandXboxController(0)  # a=x  x=b  b=a  y=y  (xbox=logitech)
         
         # # Max speed variables
         # self.max_linear_speed = SwerveDriveConstants.max_linear_speed
@@ -25,10 +25,13 @@ class RobotContainer:
 
     def configure_button_bindings_teleop(self):
         # Set default command for drivetrain
-        self.controller.a().whileTrue(
+        self.controller.y().whileTrue(
             self.elevator.runOnce(lambda: self.elevator.spin_motor(.10))
         )
-        self.controller.a().whileFalse(
+        self.controller.b().whileTrue(
+            self.elevator.runOnce(lambda: self.elevator.spin_motor_reverse(.10))
+        )
+        self.controller.x().whileTrue(
             self.elevator.runOnce(lambda: self.elevator.spin_motor(0))
         )
         
