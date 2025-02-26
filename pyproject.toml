@@ -3,8 +3,9 @@
 # on your RoboRIO
 #
 
-[tool.robotpy.pyfrc]
-isolated = true
+#[tool.robotpy.pyfrc]
+#isolated = true
+[tool.robotpy]
 
 # Version of robotpy this project depends on
 robotpy_version = "2025.3.1.1"
@@ -28,4 +29,6 @@ robotpy_extras = [
 ]
 
 # Other pip packages to install
-requires = []
+requires = [
+    "shapely==2.0.7"
+]
