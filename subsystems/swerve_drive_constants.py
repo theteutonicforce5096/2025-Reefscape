@@ -14,8 +14,8 @@ class SwerveDriveConstants:
 
     # Variables for alignment to speaker
     robot_length = 0.832 # Length of the robot in meters
-    robot_distance_to_reef = 0.0 # Distance in meters the robot needs to be away from reef for alignment to Reef
-    robot_distance_to_coral = 0.1651 # Distance in meters the robot needs to move from AprilTag to coral post on either side
+    reef_spacing = 0.1 # Distance in meters the robot needs to be away from reef for alignment to Reef
+    coral_offset = 0.1651 # Distance in meters from AprilTag to coral post on either side
 
     # The steer motor uses any SwerveModule.SteerRequestType control request with the
     # output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
@@ -243,6 +243,6 @@ class SwerveDriveConstants:
             clazz.max_linear_speed,
             clazz.max_angular_rate,
             clazz.robot_length,
-            clazz.robot_distance_to_reef,
-            clazz.robot_distance_to_coral
+            clazz.reef_spacing,
+            clazz.coral_offset
         )

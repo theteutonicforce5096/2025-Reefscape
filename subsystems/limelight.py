@@ -1,5 +1,7 @@
 from ntcore import NetworkTableInstance
 
+from robotpy_apriltag import AprilTagFieldLayout, AprilTagField
+
 from phoenix6 import utils
 
 from wpimath.geometry import Pose2d, Rotation2d
@@ -16,6 +18,23 @@ class Limelight:
         
         # Get Limelight's network table
         self.limelight_network_table = NetworkTableInstance.getDefault().getTable("limelight")
+
+        # Field Boundaries
+        field_boundary = Polygon([
+            (0.000, 1.250),
+            (0.000, 6.800),
+            (1.735, 8.052),
+            (v4_x, v4_y),
+            (v5_x, v5_y),
+            (v6_x, v6_y),
+            (v7_x, v7_y),
+            (v8_x, v8_y)
+        ])
+
+        # Get height and width of field 
+        april_tag_field = AprilTagFieldLayout.loadField(AprilTagField.k2025ReefscapeWelded)
+        self.field_length = april_tag_field.getFieldLength()
+        self.field_width = april_tag_field.getFieldWidth()
 
     def set_limelight_network_table_entry_double(self, entry_name, value):
         """
@@ -65,16 +84,25 @@ class Limelight:
             # Get robot pose
             robot_pose = Pose2d(robot_pose_array[0], robot_pose_array[1], Rotation2d.fromDegrees(robot_pose_array[5]))
 
-            if robot_pose == Pose2d(0, 0, 0):
-                robot_pose = None
-                timestamp = None
-            else:
+            # Get translation components of robot pose
+            x = robot_pose.X()
+            y = robot_pose.Y()
+
+            # Check if pose is within field boundary
+            within_field_x = (0.0 <= x <= self.field_length)
+            within_field_y = (0.0 <= y <= self.field_width)
+            
+            if robot_pose != Pose2d(0, 0, 0) and within_field_x and within_field_y:
                 # Get latency
                 latency = robot_pose_array[6]
 
                 # Convert server timestamp from microseconds to seconds and adjust for latency in ms.
                 # Then, convert to timebase that phoenix6 uses.
-                timestamp = utils.fpga_to_current_time((fpga_timestamp_microseconds / 1000000.0) - (latency / 1000.0))            
+                timestamp = utils.fpga_to_current_time((fpga_timestamp_microseconds / 1000000.0) - (latency / 1000.0))  
+            else:            
+                # Set robot pose and timestamp to None if robot pose is invalid
+                robot_pose = None
+                timestamp = None       
 
         # Return robot pose and timestamp
         return robot_pose, timestamp
