@@ -13,8 +13,13 @@ class climb_mechanism:
     def __init__(self, left_servo:wpilib.Servo, right_servo:wpilib.Servo, encoderDude:wpilib.DutyCycleEncoder, left_motor:rev.SparkMax, right_motor:rev.SparkMax):
         
         
-        # Initializing Servos
-        # self.andyMark = wpilib.Servo(0)
+        # Initializing Everything!!!
+        self.andyMark = left_servo
+        self.andyMark1 = right_servo
+        self.encoderDude = encoderDude
+        self.ClimberMotorLeft = left_motor
+        self.ClimberMoterRight = right_motor
+        
         # self.andyMark1 = wpilib.Servo(1)
         
         # Initializing andyMarks
@@ -117,7 +122,7 @@ class climb_mechanism:
 
     def climb(self):
         # when it activates the climb thing and turns the servo to latch in the 3d printed thing
-        self.ClimberMotorLeft.set(.12)
+        self.ClimberMotorLeft.set(-0.12)
      
         
         
@@ -132,9 +137,13 @@ class climb_mechanism:
     def periodic(self):
         
         # CLIMBING #
-        if self.ClimberMotorLeft.get() >= 0.01:
-            if self.encoderDude.get() >= 0.33:
+        if self.ClimberMotorLeft.get() <= -0.01:
+            if self.encoderDude.get() <= 0.08:
                 self.ClimberMotorLeft.set(0.0)
+        # if self.ClimberMotorLeft.get() >= 0.01:
+        #     if self.encoderDude.get() >= 0.33:
+        #         self.ClimberMotorLeft.set(0.0)
+                print("It has successfully climbed!!")
 
         # if self.climb_timer.isRunning() and self.climb_timer.hasElapsed(2):
         #     self.ClimberMotorLeft.set(0)
@@ -148,13 +157,15 @@ class climb_mechanism:
         if self.ratchet_timer.isRunning():
             if self.ratchet_timer.hasElapsed(2):
                 self.ratchet_timer.stop()
-                self.ClimberMotorLeft.set(-.08)
+                self.ClimberMotorLeft.set(0.08)
                 
        
-       
-        if self.ClimberMotorLeft.get() <= -0.01:
-            if self.encoderDude.get() <= 0.08:
+        if self.ClimberMotorLeft.get() >= 0.01:
+            if self.encoderDude.get() >= 0.33:
                 self.ClimberMotorLeft.set(0.0)
+        # if self.ClimberMotorLeft.get() <= -0.01:
+        #     if self.encoderDude.get() <= 0.08:
+        #         self.ClimberMotorLeft.set(0.0)
                 self.__engageRatchet__()
                 print("IT HAS SUCCESSFULLY RESET!!!!")
 
