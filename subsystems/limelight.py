@@ -19,18 +19,6 @@ class Limelight:
         # Get Limelight's network table
         self.limelight_network_table = NetworkTableInstance.getDefault().getTable("limelight")
 
-        # Field Boundaries
-        field_boundary = Polygon([
-            (0.000, 1.250),
-            (0.000, 6.800),
-            (1.735, 8.052),
-            (15.820, 8.052),
-            (17.548, 6.800),
-            (17.548, 1.250),
-            (15.820, 0.000),
-            (1.735, 0.000)
-        ])
-
         # Get height and width of field 
         april_tag_field = AprilTagFieldLayout.loadField(AprilTagField.k2025ReefscapeWelded)
         self.field_length = april_tag_field.getFieldLength()

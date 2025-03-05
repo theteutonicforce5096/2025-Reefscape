@@ -31,7 +31,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
     """
 
     def __init__(self, drive_motor_type, steer_motor_type, encoder_type, drivetrain_constants, modules,
-                 max_linear_speed, max_angular_rate, robot_length, reef_spacing, coral_offset):
+                 max_linear_speed, max_angular_rate, robot_length, robot_width, reef_spacing, coral_offset):
         """
         Constructor for initializing swerve drivetrain using the specified constants.
 
@@ -51,6 +51,8 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         :type max_angular_rate: float
         :param robot_length: Length of the robot in meters.
         :type robot_length: float
+        :param robot_width: Width of the robot in meters.
+        :type robot_width: float
         :param reef_spacing: Distance in meters the robot needs to be away from reef for alignment to Reef
         :type reef_spacing: float
         :param coral_offset: Distance in meters from AprilTag to coral post on either side
