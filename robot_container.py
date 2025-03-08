@@ -10,30 +10,64 @@ from phoenix6 import SignalLogger
 
 from math import pi
 
+from commands2.cmd import print_ #for testing pid values
+
 class RobotContainer:
     def __init__(self):
         # Initialize hardware
         # self.drivetrain = SwerveDriveConstants.create_drivetrain()
-        self.elevator = Elevator(1)
+        self.elevator = Elevator(1, 50)
 
         # # Initialize controller
-        self.controller = commands2.button.CommandXboxController(0)  # a=x  x=b  b=a  y=y  (xbox=logitech)
+        self.controller = commands2.button.CommandXboxController(0)
         
         # # Max speed variables
         # self.max_linear_speed = SwerveDriveConstants.max_linear_speed
         # self.max_angular_rate = SwerveDriveConstants.max_angular_rate
 
     def configure_button_bindings_teleop(self):
-        # Set default command for drivetrain
-        self.controller.y().whileTrue(
-            self.elevator.runOnce(lambda: self.elevator.spin_motor(.10))
-        )
-        self.controller.b().whileTrue(
-            self.elevator.runOnce(lambda: self.elevator.spin_motor_reverse(.10))
-        )
+        
+        self.controller.a().whileTrue(
+            commands2.RepeatCommand(
+                self.elevator.runOnce(lambda: self.elevator.run_pid(.5))
+                )
+            )
+        
         self.controller.x().whileTrue(
+            self.elevator.runOnce(lambda: self.elevator.spin_motor(-.1))
+        )
+        
+        self.controller.b().whileTrue(
+            self.elevator.runOnce(lambda: self.elevator.spin_motor(.1))
+        )
+        
+        # self.controller.x().whileTrue(
+        #     commands2.DeferredCommand(
+        #         lambda: self.elevator.spin_motor(
+        #             (self.elevator.get_encoder_value()/5) #+ self.elevator.feedforward.calculate())/10 #help pls
+        #         )
+        #     )
+        # )
+        
+        (self.controller.a()).onFalse(
             self.elevator.runOnce(lambda: self.elevator.spin_motor(0))
         )
+        
+        (self.controller.b()).onFalse(
+            self.elevator.runOnce(lambda: self.elevator.spin_motor(0))
+        )
+        
+        (self.controller.x()).onFalse(
+            self.elevator.runOnce(lambda: self.elevator.spin_motor(0))
+        )
+        
+        
+        self.controller.rightTrigger().whileTrue(
+            self.elevator.run(lambda: self.elevator.print_encoder_position())  
+        )   
+        
+        
+        
         
         # starting_pose = self.drivetrain.get_starting_position()
         # self.drivetrain.reset_pose(starting_pose)    
