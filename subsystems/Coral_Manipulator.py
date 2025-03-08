@@ -9,7 +9,7 @@ import robot
 class coral_manipulator:
 
     def __init__(self):
-        self.WAcontroller = wpilib.Servo(0)
+        self.WAcontroller = wpilib.Servo(9)
         # The Actuonix L16 expects pulse widths between 1000 µs and 2000 µs
         self.WAcontroller.setBounds(
             max=2000,
@@ -20,15 +20,15 @@ class coral_manipulator:
         self.wide_limits = False
 
     def PSA(self):
+         # Position to scoring angle oh yeah!!
         new_position = 0.0 if self.wide_limits else 0.25
         print(f"{new_position:0.2f}")
-        # Position to scoring angle oh yeah!!
         self.WAcontroller.setPosition(new_position)
 
     def PLA(self):
+          # Position to Loading Angle
         new_position = 1.0 if self.wide_limits else 0.75
         print(f"{new_position:0.2f}")
-        # Position to Loading Angle
         self.WAcontroller.setPosition(new_position)
 
     def RESET(self):
