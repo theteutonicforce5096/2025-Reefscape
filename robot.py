@@ -10,13 +10,7 @@ class ReefscapeRobot(wpilib.TimedRobot):
     def robotInit(self):
         self.pxn_fightstick = wpilib.Joystick(0)
         
-        # Initializing Encoder
-        self.encoderDude = wpilib.DutyCycleEncoder(0)
-        self.encoderDude.setAssumedFrequency(wpimath.units.hertz (975.6))
-        self.encoderDude.setDutyCycleRange(min = 1/1025, max = 1024/1025)
-        self.encoderDude.setInverted(True)
-        
-        self.encodingTimer = wpilib.Timer()
+       
         
        
         
@@ -45,12 +39,12 @@ class ReefscapeRobot(wpilib.TimedRobot):
         self.ClimberMotorRight.set(0.0)
         # self.ClimberMotorRight.setExpiration(3.0)
         # self.ClimberMotorRight.setSafetyEnabled(False)
-        self.config = rev.SparkBaseConfig()
-        self.config.follow(1)
-        self.ClimberMotorRight.configure(self.config, rev.SparkMax.ResetMode.kResetSafeParameters, rev.SparkMax.PersistMode.kNoPersistParameters)
+        ClimbMotorRightConfig = rev.SparkBaseConfig()
+        ClimbMotorRightConfig.inverted(True)
+        self.ClimberMotorRight.configure(ClimbMotorRightConfig, rev.SparkMax.ResetMode.kResetSafeParameters, rev.SparkMax.PersistMode.kNoPersistParameters)
 
         # Initializing girly pop climbgal
-        self.Climbgal = Climbguy.climb_mechanism(self.andyMark, self.andyMark1, self.encoderDude, self.ClimberMotorLeft, self.ClimberMotorRight )
+        self.Climbgal = Climbguy.climb_mechanism(self.andyMark, self.andyMark1, self.relative_encoder, self.ClimberMotorLeft, self.ClimberMotorRight )
 
     def teleopInit(self):
        pass
