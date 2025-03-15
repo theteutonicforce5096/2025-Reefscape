@@ -33,6 +33,7 @@ class climb_mechanism:
         # Initialize timers
         self.ratchet_timer = wpilib.Timer()
         self.print_timer = wpilib.Timer()
+        self.home_timer = wpilib.Timer()
 
 
     
@@ -47,7 +48,7 @@ class climb_mechanism:
 
     def getArmPosition(self):
         #This is all good we jsut need the home position defined 
-        self.EncoderVal = self.__getRawEncoderVal__() 
+        self.EncoderVal = self.getRawEncoderVal() 
         self.ArmPosition = self.EncoderVal / self.GEARRATIO - self.HomePosition
         print(self.ArmPosition)
         
@@ -88,8 +89,8 @@ class climb_mechanism:
     def periodic(self):
         
         # Update the custom dashboard with current values
-        self.sd_table.putNumber(self.TM_ENCODER_INDICATOR, self.__getRawEncoderVal__())
-        self.sd_table.putNumber(self.TM_ARM_POSITION_INDICATOR, self.__getArmPosition__())
+        self.sd_table.putNumber(self.TM_ENCODER_INDICATOR, self.getRawEncoderVal())
+        self.sd_table.putNumber(self.TM_ARM_POSITION_INDICATOR, self.getArmPosition())
 
         # CLIMBING #
         if self.ClimberMotorLeft.get() <= -0.01:
@@ -122,22 +123,52 @@ class climb_mechanism:
 #### HOME POSITION STUFF ####
 
     def findHomePosition(self):
-        self.ClimberMotorLeft.set(0.1)
+        self.__disengageRatchet__()
+        self.ratchet_timer.restart()
+        self.home_timer.stop()
+        
+
+       
         self.LastEncoderValue = self.MotorEncoder.getPosition()
     
 
 
-    def testPeriodic(self) -> None:
+    def testPeriodic(self):
 
-        self.CurrentEncoderValue = self.MotorEncoder.getPosition()
+        # finding home position - rest of the code
+        
+        current_encoder_value = self.MotorEncoder.getPosition()
 
-        self.CurrentEncoderValue - self.LastEncoderValue 
-        if (self.CurrentEncoderValue - self.LastEncoderValue) <= 0:
-            self.HomePosition = self.MotorEncoder.getPosition()
-            self.ClimberMotorLeft.set(0)
+        # This if statement takes care of waiting until the ratchet gets out of the way
+        if self.ratchet_timer.isRunning():
+            if self.ratchet_timer.hasElapsed(2):
+                print("ratchet timer elapsed")
+                self.ClimberMotorLeft.set(0.04)
+                self.ratchet_timer.reset()
 
-        self.LastEncoderValue = self.CurrentEncoderValue
+                self.home_timer.restart()
+                self.LastEncoderValue = current_encoder_value
 
+
+        if self.home_timer.isRunning():
+            if self.home_timer.advanceIfElapsed(.25):
+                print(f"{current_encoder_value:0.2f}")
+                if current_encoder_value - self.LastEncoderValue <= 0.01:
+                    self.ClimberMotorLeft.set(0.0)
+                    self.home_timer.stop()
+                    self.HomePosition = current_encoder_value
+                else:
+                    self.LastEncoderValue = current_encoder_value
+        #   ^^^ If the motor is still running and the encoder hasn't changed, 
+        #   ^^^ then we must be at the physical stop of the mechanism :DDD
+    
+    
+    
+        
+        # ^^^ We set the last encoder value to be equal to what it is equal to currently
+        # ^^^ This is home position
+            
+            
 
         
            
