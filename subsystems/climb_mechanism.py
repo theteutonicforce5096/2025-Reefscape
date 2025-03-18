@@ -16,8 +16,7 @@ class climb_mechanism:
     TM_ARM_POSITION_INDICATOR = 'arm_position'
 
     def __init__(self, left_servo:wpilib.Servo, left_motor:rev.SparkMax):
-       
-        
+        #TODO: Looks like we have to go back to using the external encoder... so need to add a parameter for robot.py to pass use the encoder object to use.
 
         # Initializing Everything!!!
         self.andyMark = left_servo
@@ -29,6 +28,7 @@ class climb_mechanism:
 
        
         self.HomePosition = 0
+        #TODO: Rather than auto-finding the home position, we will need to figure it out and pass it in during instantiation.
         
         # Initialize timers
         self.ratchet_timer = wpilib.Timer()
@@ -44,7 +44,10 @@ class climb_mechanism:
 
 
     def getRawEncoderVal(self) -> float:
+        #TODO: Change the name of this function to make it clear that it gets the motor's encoder value
         return self.MotorEncoder.getPosition() 
+
+    #TODO: Make a function that returns the absolute encoder's value
 
     def getArmPosition(self):
         #This is all good we jsut need the home position defined 
@@ -116,11 +119,14 @@ class climb_mechanism:
                     print("IT HAS SUCCESSFULLY RESET!!!!")
 
 
+    #TODO: Make a function that allows Test Mode to command the motor to move
 
 
 
 
-#### HOME POSITION STUFF ####
+    #### HOME POSITION STUFF ####
+
+    #TODO: Comment this home-finding code out for now. We may use it later, but for now, we will rely on the absolute encoder for positioning.
 
     def findHomePosition(self):
         self.__disengageRatchet__()
@@ -155,6 +161,9 @@ class climb_mechanism:
                 print(f"{current_encoder_value:0.2f}")
                 if current_encoder_value - self.LastEncoderValue <= 0.01:
                     self.ClimberMotorLeft.set(0.0)
+                    blah = rev.SparkBaseConfig()
+                    blah.smartCurrentLimit()
+                    self.ClimberMotorLeft.configure(blah)
                     self.home_timer.stop()
                     self.HomePosition = current_encoder_value
                 else:
