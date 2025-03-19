@@ -10,13 +10,22 @@ import rev
 class ReefscapeRobot(wpilib.TimedRobot):
 
     def robotInit(self):
-        self.pxn_fightstick = wpilib.Joystick(0)
+        self.pxn_fightstick = wpilib.Joystick(1)
+        self.goodStick = wpilib.Joystick(0)
 
         # Initializing Servos
         self.andyMark = wpilib.Servo(0)
         self.andyMark.setBounds(
             max=2500, deadbandMax=1500, center=1500, deadbandMin=1500, min=500
         )
+
+
+        # Initializing Encoder
+        self.encoderDude = wpilib.DutyCycleEncoder(0)
+        self.encoderDude.setAssumedFrequency(wpimath.units.hertz (975.6))
+        self.encoderDude.setDutyCycleRange(min = 1/1025, max = 1024/1025)
+        self.encoderDude.setInverted(True)
+
 
         # Initializing Motor
         self.ClimberMotorLeft = rev.SparkMax(49, rev.SparkMax.MotorType.kBrushless)
@@ -32,7 +41,7 @@ class ReefscapeRobot(wpilib.TimedRobot):
 
         # Initializing girly pop climbgal
         self.Climbgal = climb_mechanism.climb_mechanism(
-            self.andyMark, self.ClimberMotorLeft
+            self.andyMark, self.ClimberMotorLeft, self.encoderDude, self.goodStick
         )
 
         # Network tables are used for Test Mode
@@ -47,7 +56,9 @@ class ReefscapeRobot(wpilib.TimedRobot):
         # Calling the methods made in Climbguy.py
 
         if self.pxn_fightstick.getRawButtonPressed(3):
-            self.Climbgal.__getHomePosition__()
+            self.Climbgal.getHomePosition()
+
+        
 
         self.Climbgal.periodic()
 
@@ -88,7 +99,10 @@ class ReefscapeRobot(wpilib.TimedRobot):
         return super().testInit()
 
     def testPeriodic(self):
-
+        
+        joystickAxis = self.goodStick.getY()
+        self.Climbgal.funcThatAllowsTestModeToCommandMotor(joystickAxis)
+        
         if self.pxn_fightstick.getRawButtonPressed(4):
             #TODO: Comment this out for now, as we are not using the encoder
             self.Climbgal.findHomePosition()

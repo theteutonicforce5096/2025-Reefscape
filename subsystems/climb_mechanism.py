@@ -6,6 +6,7 @@ from wpilib import Timer
 import rev
 from networktables import NetworkTables
 
+
 class climb_mechanism:
 
     GEARRATIO = 155.6
@@ -15,20 +16,22 @@ class climb_mechanism:
     TM_ENCODER_INDICATOR = 'encoder_value'
     TM_ARM_POSITION_INDICATOR = 'arm_position'
 
-    def __init__(self, left_servo:wpilib.Servo, left_motor:rev.SparkMax):
+    def __init__(self, left_servo:wpilib.Servo, left_motor:rev.SparkMax, encoderDude:wpilib.DutyCycleEncoder, goodStick:wpilib.Joystick):
         #TODO: Looks like we have to go back to using the external encoder... so need to add a parameter for robot.py to pass use the encoder object to use.
 
         # Initializing Everything!!!
         self.andyMark = left_servo
         self.ClimberMotorLeft = left_motor
         self.MotorEncoder = self.ClimberMotorLeft.getEncoder()
+        self.encoderDude = encoderDude
+        self.goodStick = goodStick 
         
+        
+        self.HomePosition = self.findHomePosition()
         
         self.__engageRatchet__()
 
        
-        self.HomePosition = 0
-        #TODO: Rather than auto-finding the home position, we will need to figure it out and pass it in during instantiation.
         
         # Initialize timers
         self.ratchet_timer = wpilib.Timer()
@@ -43,17 +46,19 @@ class climb_mechanism:
         self.sd_table = NetworkTables.getTable('SmartDashboard')
 
 
-    def getRawEncoderVal(self) -> float:
-        #TODO: Change the name of this function to make it clear that it gets the motor's encoder value
+    def getRawMotorEncoderVal(self) -> float:
         return self.MotorEncoder.getPosition() 
 
-    #TODO: Make a function that returns the absolute encoder's value
+    def AbsEncoderVal(self) -> float:
+        return self.encoderDude.getPosition()
+   
 
     def getArmPosition(self):
         #This is all good we jsut need the home position defined 
-        self.EncoderVal = self.getRawEncoderVal() 
+        self.EncoderVal = self.getRawMotorEncoderVal() 
         self.ArmPosition = self.EncoderVal / self.GEARRATIO - self.HomePosition
         print(self.ArmPosition)
+
         
     
     def stop(self):
@@ -83,7 +88,7 @@ class climb_mechanism:
        
             
     def reset(self):
-        # if you dont know what reset is, go back to ,middle school
+        # if you dont know what reset is, go back to middle school
         self.__disengageRatchet__()
         self.ratchet_timer.restart()
 
@@ -92,7 +97,7 @@ class climb_mechanism:
     def periodic(self):
         
         # Update the custom dashboard with current values
-        self.sd_table.putNumber(self.TM_ENCODER_INDICATOR, self.getRawEncoderVal())
+        self.sd_table.putNumber(self.TM_ENCODER_INDICATOR, self.getRawMotorEncoderVal())
         self.sd_table.putNumber(self.TM_ARM_POSITION_INDICATOR, self.getArmPosition())
 
         # CLIMBING #
@@ -117,6 +122,12 @@ class climb_mechanism:
                     self.ClimberMotorLeft.set(0.0)
                     self.__engageRatchet__()
                     print("IT HAS SUCCESSFULLY RESET!!!!")
+
+
+    def funcThatAllowsTestModeToCommandMotor(self, motorSpeed:float):
+        self.ClimberMotorLeft.set(motorSpeed / 10)
+        
+    
 
 
     #TODO: Make a function that allows Test Mode to command the motor to move
