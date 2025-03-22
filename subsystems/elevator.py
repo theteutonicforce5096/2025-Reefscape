@@ -1,4 +1,4 @@
-from commands2 import Subsystem
+from commands2 import Subsystem, SequentialCommandGroup, WaitCommand
 import rev
 from wpilib import DutyCycleEncoder
 from commands2.cmd import print_
@@ -50,11 +50,13 @@ class Elevator(Subsystem):
         )
 
     def spin_motor(self, percent):
+        self.motor_speed = percent
         self.motor.set(percent)
         
     def run_pid(self, goal):
         pos = self.get_encoder_value()
         speed = self.pid_controller.calculate(pos, goal)
+        self.motor_speed = speed
         self.spin_motor(speed)
         
     def get_encoder_value(self):
@@ -63,3 +65,39 @@ class Elevator(Subsystem):
     def print_encoder_position(self):
         self.encoder_position = self.get_encoder_value() # encoder reads values from -.5 to .5
         print_(self.encoder_position).schedule()
+        
+    # def find_encoder_change(self):
+    #     normal_distance = .6
+    #     self.final_pos = self.get_encoder_value()
+    #     if self.final_pos < self.initial_pos and self.motor_speed > 0:
+    #         self.final_pos += 1
+    #     if self.initial_pos < self.final_pos and self.motor_speed < 0:
+    #         self.final_pos -= 1
+    #     change_in_pos = self.final_pos - self.initial_pos
+    #     status = 'movin'
+    #     if normal_distance > change_in_pos > -normal_distance:
+    #         status = 'stuck'
+    #     print_((change_in_pos, status)).schedule()
+        
+    def find_encoder_change(self):
+        normal_distance = .3
+        self.final_pos = self.get_encoder_value()
+        if self.final_pos < self.initial_pos and self.motor_speed > 0:
+            self.final_pos += 1
+        if self.initial_pos < self.final_pos and self.motor_speed < 0:
+            self.final_pos -= 1
+        change_in_pos = self.final_pos - self.initial_pos
+        status = 'movin'
+        if normal_distance > change_in_pos > -normal_distance:
+            status = 'stuck'
+        print_((change_in_pos, status)).schedule()
+        if status == 'stuck':
+            self.motor.set(0)
+        
+    # the goal is to set the motor to a low voltage and check before and after pos to see if there is any resistance
+    def spin_test(self):
+        self.initial_pos = self.get_encoder_value()
+        SequentialCommandGroup(
+            WaitCommand(1), 
+            self.runOnce(lambda: self.find_encoder_change())
+        ).schedule()

@@ -114,7 +114,7 @@ class RobotContainer:
         #     )
         # )
     
-    # def configure_button_bindings_test(self):
+    def configure_button_bindings_test(self):
     #     # Set the SysId Routine to run based off of the routine chosen in Shuffleboard.
     #     self.drivetrain.set_sys_id_routine()
     
@@ -125,3 +125,27 @@ class RobotContainer:
     #     self.controller.a().whileTrue(self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kReverse))
     #     self.controller.b().whileTrue(self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kForward))
     #     self.controller.x().whileTrue(self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kReverse))
+    
+        self.controller.povUp().onTrue(
+            self.elevator.runOnce(lambda: self.elevator.spin_motor(.05))
+        )
+        
+        self.controller.povDown().onTrue(
+            self.elevator.runOnce(lambda: self.elevator.spin_motor(-.05))
+        )
+        
+        self.controller.povRight().onTrue(
+            self.elevator.runOnce(lambda: self.elevator.spin_test())
+        )
+        
+        self.controller.rightTrigger().whileTrue(
+            self.elevator.run(lambda: self.elevator.print_encoder_position())  
+        )   
+
+        self.controller.povLeft().onTrue(
+            self.elevator.runOnce(lambda: self.elevator.spin_motor(0))
+        )
+        
+        # self.controller.povDown().onFalse(
+        #     self.elevator.runOnce(lambda: self.elevator.spin_motor(0))
+        # )
