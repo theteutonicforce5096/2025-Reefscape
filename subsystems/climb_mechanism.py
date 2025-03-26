@@ -5,6 +5,8 @@ import wpimath.units
 from wpilib import Timer
 import rev
 from networktables import NetworkTables
+from rev import ClosedLoopConfig
+
 
 
 class climb_mechanism:
@@ -12,6 +14,7 @@ class climb_mechanism:
     CURRENT_LIMIT_WEAK = 4          # Amps
     CURRENT_LIMIT_STRONG = 20       # Amps
     RATCHET_MOVE_TIME = 1.25        # seconds
+    TARGET_POSTION = -0.42          # encoder
 
     def __init__(
         self,
@@ -37,6 +40,9 @@ class climb_mechanism:
             rev.SparkMax.ResetMode.kNoResetSafeParameters,
             rev.SparkMax.PersistMode.kNoPersistParameters
         )
+        self.PID_Controller = self.ClimberMotor.getClosedLoopController()
+        self.PID_Controller.setReference(-0.42, rev.SparkMax.ControlType.kPosition, 0)
+
 
         self.motor_encoder = self.ClimberMotor.getEncoder()
         self.absolute_encoder = self.ClimberMotor.getAbsoluteEncoder()
@@ -83,8 +89,7 @@ class climb_mechanism:
 
     def climb(self):
         # Negative value is the climb direction while positive is the reset.
-        self.ClimberMotor.set(-0.12)
-
+        self.ClimberMotor.set(-0.05)
     def reset(self):
         # if you dont know what reset is, go back to middle school
         self.__disengageRatchet__()
@@ -92,12 +97,12 @@ class climb_mechanism:
 
     def periodic(self):
         # Update the custom dashboard with current values
-        self.sd_table.putNumber(self.TM_ENCODER_INDICATOR, self.getMotorEncoderPosition())
-        self.sd_table.putNumber(self.TM_ARM_POSITION_INDICATOR, self.getArmPosition())
+        # self.sd_table.putNumber(self.TM_ENCODER_INDICATOR, self.getMotorEncoderPosition())
+        # self.sd_table.putNumber(self.TM_ARM_POSITION_INDICATOR, self.getArmPosition())
 
         # CLIMBING #
         if self.ClimberMotor.get() <= -0.01:
-            if self.motor_encoder.get() <= 0.08:
+            if self.motor_encoder.getPosition() <= self.TARGET_POSTION:
                 self.ClimberMotor.set(0.0)
                 print("It has successfully climbed!!")
 
@@ -106,10 +111,10 @@ class climb_mechanism:
         if self.ratchet_timer.isRunning():
             if self.ratchet_timer.hasElapsed(2):
                 self.ratchet_timer.stop()
-                self.ClimberMotor.set(0.12)
+                self.ClimberMotor.set(0.05)
 
         if self.ClimberMotor.get() >= 0.01:
-            if self.motor_encoder.get() >= 0.33:
+            if self.motor_encoder.getPosition() >= 0:
                 self.ClimberMotor.set(0.0)
                 self.__engageRatchet__()
                 print("IT HAS SUCCESSFULLY RESET!!!!")

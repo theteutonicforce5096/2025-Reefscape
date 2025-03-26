@@ -68,12 +68,12 @@ class ReefscapeRobot(wpilib.TimedRobot):
 
         # Initializing girly pop climbgal left
         self.Climbgal_L = climb_mechanism.climb_mechanism(
-            self.andyMark_L, 1
+            self.andyMark_L, 61
         )
 
         # Initializing girly pop climbgal right
         self.Climbgal_R = climb_mechanism.climb_mechanism(
-            self.andyMark_R, 2
+            self.andyMark_R, 62
         )
 
         # Network tables are used for Test Mode
