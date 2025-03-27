@@ -81,10 +81,16 @@ class ReefscapeRobot(wpilib.TimedRobot):
         self.sd_table = NetworkTables.getTable("SmartDashboard")
 
     def teleopInit(self):
-        pass
+        self.Climbgal_L.teleopInit()
+        self.Climbgal_R.teleopInit()
 
     def teleopPeriodic(self):
-        pass
+        
+        if self.pxn_fightstick.getRawButtonPressed(9):
+            print("button 9")
+            # self.Climbgal_L.climb()
+            self.Climbgal_R.climb()
+
         # # Calling 'Get absolute encoder'
         # self.Climbgal_L.AbsEncoderVal()
 
@@ -93,7 +99,8 @@ class ReefscapeRobot(wpilib.TimedRobot):
         # if self.pxn_fightstick.getRawButtonPressed(3):
         #     self.Climbgal_L.getHomePosition()
 
-        # self.Climbgal_L.periodic()
+        self.Climbgal_L.periodic()
+        self.Climbgal_R.periodic()
 
     def teleopExit(self):
         pass
@@ -115,18 +122,23 @@ class ReefscapeRobot(wpilib.TimedRobot):
         self.Climbgal_L.testPeriodic()
         self.Climbgal_R.testPeriodic()
 
-        self.sd_table.putNumber("climber_L_abs_enc", self.Climbgal_L.getAbsoluteEncoderPosition())
-        self.sd_table.putNumber("climber_R_abs_enc", self.Climbgal_R.getAbsoluteEncoderPosition())
+        # self.sd_table.putNumber("climber_L_abs_enc", self.Climbgal_L.getAbsoluteEncoderPosition())
+        # self.sd_table.putNumber("climber_R_abs_enc", self.Climbgal_R.getAbsoluteEncoderPosition())
         self.sd_table.putNumber("climber_L_rel_enc", self.Climbgal_L.getMotorEncoderPosition())
         self.sd_table.putNumber("climber_R_rel_enc", self.Climbgal_R.getMotorEncoderPosition())
+        
         # Puts encoder value onto the Network Table
 
         # Left Thumbstick
-        joystickAxis = self.goodStick.getLeftY()
-        self.Climbgal_L.motorDirect(-joystickAxis)
+        joystickAxis_L = -self.goodStick.getLeftY()
+        self.Climbgal_L.motorDirect(joystickAxis_L)
         # Right Thumbstick
-        joystickAxis = self.goodStick.getRightY()
-        self.Climbgal_R.motorDirect(-joystickAxis)
+        joystickAxis_R = -self.goodStick.getRightY()
+        self.Climbgal_R.motorDirect(joystickAxis_R)
+
+        # Making the encoder values corresponding to the drivers station or smth
+        self.sd_table.putNumber("climber_R_motor_cmd", joystickAxis_R)
+        self.sd_table.putNumber("climber_L_motor_cmd", joystickAxis_L)
 
         ### DISENGAGING AND ENGAGING RATCHET??? ### 
         ratchet_engage_L = self.sd_table.getBoolean("ratchet_engage_L", False)
@@ -142,10 +154,10 @@ class ReefscapeRobot(wpilib.TimedRobot):
         else:
             self.Climbgal_R.__disengageRatchet__()
 
-        if self.goodStick.getXButtonPressed():
+        if self.pxn_fightstick.getRawButtonPressed(7):
             self.Climbgal_L.findHomePosition()
 
-        if self.goodStick.getBButtonPressed():
+        if self.pxn_fightstick.getRawButtonPressed(8):
             self.Climbgal_R.findHomePosition()
 
 if __name__ == "__main__":
