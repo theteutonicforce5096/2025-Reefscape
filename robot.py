@@ -68,12 +68,12 @@ class ReefscapeRobot(wpilib.TimedRobot):
 
         # Initializing girly pop climbgal left
         self.Climbgal_L = climb_mechanism.climb_mechanism(
-            self.andyMark_L, 61
+            self.andyMark_L, 61, "climber_L"
         )
 
         # Initializing girly pop climbgal right
         self.Climbgal_R = climb_mechanism.climb_mechanism(
-            self.andyMark_R, 62
+            self.andyMark_R, 62, "climber_R"
         )
 
         # Network tables are used for Test Mode
@@ -88,16 +88,12 @@ class ReefscapeRobot(wpilib.TimedRobot):
         
         if self.pxn_fightstick.getRawButtonPressed(9):
             print("button 9")
-            # self.Climbgal_L.climb()
+            self.Climbgal_L.climb()
             self.Climbgal_R.climb()
-
-        # # Calling 'Get absolute encoder'
-        # self.Climbgal_L.AbsEncoderVal()
-
-        # # Calling the methods made in Climbguy.py
-
-        # if self.pxn_fightstick.getRawButtonPressed(3):
-        #     self.Climbgal_L.getHomePosition()
+        if self.pxn_fightstick.getRawButtonPressed(10):
+            print("button 10")
+            self.Climbgal_L.reset()
+            self.Climbgal_R.reset()
 
         self.Climbgal_L.periodic()
         self.Climbgal_R.periodic()
@@ -110,6 +106,8 @@ class ReefscapeRobot(wpilib.TimedRobot):
     def testInit(self):
         self.Climbgal_L.stop()
         self.Climbgal_R.stop()
+        self.Climbgal_R.testInit()
+        self.Climbgal_L.testInit()
         # Testing the encoder
         # self.encodingTimer.restart()
 
@@ -121,13 +119,6 @@ class ReefscapeRobot(wpilib.TimedRobot):
     def testPeriodic(self):
         self.Climbgal_L.testPeriodic()
         self.Climbgal_R.testPeriodic()
-
-        # self.sd_table.putNumber("climber_L_abs_enc", self.Climbgal_L.getAbsoluteEncoderPosition())
-        # self.sd_table.putNumber("climber_R_abs_enc", self.Climbgal_R.getAbsoluteEncoderPosition())
-        self.sd_table.putNumber("climber_L_rel_enc", self.Climbgal_L.getMotorEncoderPosition())
-        self.sd_table.putNumber("climber_R_rel_enc", self.Climbgal_R.getMotorEncoderPosition())
-        
-        # Puts encoder value onto the Network Table
 
         # Left Thumbstick
         joystickAxis_L = -self.goodStick.getLeftY()

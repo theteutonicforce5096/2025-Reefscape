@@ -7,22 +7,32 @@ import rev
 from networktables import NetworkTables
 from rev import ClosedLoopConfig
 from wpimath.controller import PIDController
+from wpimath.controller import ProfiledPIDController 
+from wpimath.trajectory import TrapezoidProfile
 
 
 
 class climb_mechanism:
     GEARRATIO = 155.6
     CURRENT_LIMIT_WEAK = 4          # Amps
-    CURRENT_LIMIT_STRONG = 20       # Amps
+    CURRENT_LIMIT_STRONG = 12       # Amps
     RATCHET_MOVE_TIME = 1.25        # seconds
-    TARGET_POSTION = -0.42          # encoder
+    TARGET_POSITION_LIFT = -0.42    # encoder
+    TARGET_POSITION_ARMED = -0.05   # encoder
+    RATCHET_TIMER_AMOUNT = 1        # seconds
+    MAX_ACCEL = .14                 # encoder units per second^2
+    MAX_SPEED = .14                 # encoder units per second
 
     def __init__(
         self,
         left_servo: wpilib.Servo,
         motor_CAN_ID: int,
-        # encoderDude: rev.SparkAbsoluteEncoder,
+        dashboard_prefix: str
     ):
+        self.nt_rel_enc_value = dashboard_prefix + "_rel_enc"
+        self.nt_abs_enc_value = dashboard_prefix + "_abs_enc"
+        self.nt_motor_cmd_value = dashboard_prefix + "_motor_cmd"
+
         # Initializing Everything!!!
         self.andyMark = left_servo
 
@@ -33,6 +43,7 @@ class climb_mechanism:
         self.motor_config.inverted(True)
         self.motor_config.encoder.positionConversionFactor(1.0 / self.GEARRATIO)
         self.motor_config.smartCurrentLimit(self.CURRENT_LIMIT_WEAK)
+        
 
         # Now initialize and configure the motor
         self.ClimberMotor = rev.SparkMax(motor_CAN_ID, rev.SparkMax.MotorType.kBrushless)
@@ -42,7 +53,9 @@ class climb_mechanism:
             rev.SparkMax.PersistMode.kNoPersistParameters
         )
         # Initializing PID 
-        self.PID = PIDController(Kp=1, Ki=0, Kd=0)
+        # self.PID = PIDController(Kp=1, Ki=0, Kd=0)
+        constraints = TrapezoidProfile.Constraints(maxVelocity= self.MAX_SPEED, maxAcceleration= self.MAX_ACCEL)
+        self.PID = ProfiledPIDController(5, 0, 0, constraints = constraints)
 
 
 
@@ -90,54 +103,60 @@ class climb_mechanism:
         self.andyMark.setPosition(engage_position)
 
     def climb(self):
+        
         print("climb command")
-        # Resetting PID
-        self.current_setpoint = self.TARGET_POSTION
+        self.PID.setGoal(self.TARGET_POSITION_LIFT)
+        self.__engageRatchet__()
         # Negative value is the climb direction while positive is the reset.
-        # self.ClimberMotor.set(-0.05)
+       
     def reset(self):
         # if you dont know what reset is, go back to middle school
         self.__disengageRatchet__()
         self.ratchet_timer.restart()
+        
+        
 
     def teleopInit(self):
-        self.PID.reset()
-        self.current_setpoint = self.motor_encoder.getPosition()
-
+        # Resetting PID
+        self.PID.reset(self.motor_encoder.getPosition())
+        self.PID.setGoal(self.motor_encoder.getPosition())
+        self.motor_config.smartCurrentLimit(self.CURRENT_LIMIT_STRONG)
+        self.ClimberMotor.configure(
+            self.motor_config,
+            rev.SparkMax.ResetMode.kNoResetSafeParameters,
+            rev.SparkMax.PersistMode.kNoPersistParameters
+        )
+        
+        
     
     def periodic(self):
+        self.sd_table.putNumber(self.nt_abs_enc_value, self.getAbsoluteEncoderPosition())
+        self.sd_table.putNumber(self.nt_rel_enc_value, self.getMotorEncoderPosition())
+
         # CLIMBING #
         current_location = self.motor_encoder.getPosition()
-        Motor_cmd = self.PID.calculate(current_location, self.current_setpoint)
-        Motor_cmd = min(Motor_cmd, 0.15)
-        Motor_cmd = max(Motor_cmd, -0.15)
+        Motor_cmd = self.PID.calculate(current_location)
+        Motor_cmd = min(Motor_cmd, 0.5)
+        Motor_cmd = max(Motor_cmd, -0.5)
         # ^^^ if the number that the motor command is reading is higher than 0.1, it will change it to 0.1 and if it is lower it will keep it there. 
-        
         self.ClimberMotor.set(Motor_cmd)
+        self.sd_table.putNumber(self.nt_motor_cmd_value, Motor_cmd)
 
 
-    #             self.ClimberMotor.set(0.0)
-    #     if self.ClimberMotor.get() <= -0.01:
-    #         if self.motor_encoder.getPosition() <= self.TARGET_POSTION:
-    #             self.ClimberMotor.set(0.0)
-    #             print("It has successfully climbed!!")
-
-    #     # RESET #
-
-    #     if self.ratchet_timer.isRunning():
-    #         if self.ratchet_timer.hasElapsed(2):
-    #             self.ratchet_timer.stop()
-    #             self.ClimberMotor.set(0.05)
-
-    #     if self.ClimberMotor.get() >= 0.01:
-    #         if self.motor_encoder.getPosition() >= 0:
-    #             self.ClimberMotor.set(0.0)
-    #             self.__engageRatchet__()
-    #             print("IT HAS SUCCESSFULLY RESET!!!!")
+ #     # RESET #
+    
+        if self.ratchet_timer.isRunning():
+            if self.ratchet_timer.hasElapsed(self.RATCHET_TIMER_AMOUNT):
+                self.ratchet_timer.stop()
+                self.PID.setGoal(self.TARGET_POSITION_ARMED)
+        
 
     def motorDirect(self, motorSpeed: float):
         if not self.home_finding_mode:
-            self.ClimberMotor.set(motorSpeed / 10)
+            motor_cmd = motorSpeed / 10
+            self.ClimberMotor.set(motor_cmd)
+            self.sd_table.putNumber(self.nt_motor_cmd_value, motor_cmd)
+
 
     #### HOME POSITION STUFF ####
 
@@ -160,9 +179,18 @@ class climb_mechanism:
         # self.home_timer.stop()
         # self.LastEncoderValue = self.motor_encoder.getPosition()
         # self.home_finding_mode = True
+    def testInit(self):
+
+        self.motor_config.smartCurrentLimit(self.CURRENT_LIMIT_WEAK)
+        self.ClimberMotor.configure(
+            self.motor_config,
+            rev.SparkMax.ResetMode.kNoResetSafeParameters,
+            rev.SparkMax.PersistMode.kNoPersistParameters
+        )
 
     def testPeriodic(self):
-        pass
+        self.sd_table.putNumber(self.nt_abs_enc_value, self.getAbsoluteEncoderPosition())
+        self.sd_table.putNumber(self.nt_rel_enc_value, self.getMotorEncoderPosition())
 
         # finding home position - rest of the code
 
