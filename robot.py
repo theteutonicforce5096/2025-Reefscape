@@ -8,11 +8,14 @@ import rev
 
 
 class ReefscapeRobot(wpilib.TimedRobot):
+
+    #TODO: Would be good to put a bunch of constants here that contain all the port and CAN ID definitions. It keeps all that information together and easy to find.
     def robotInit(self):
         self.pxn_fightstick = wpilib.Joystick(1)
         self.goodStick = wpilib.XboxController(0)
 
         # Initializing Left SERVO
+        #TODO: Since the function of the climbers depends on this specific ratchet/servo combination, it would really be more appropriate to move servo initialization into the climber_mechanism class (in the same way we moved the motor config).
         self.andyMark_L = wpilib.Servo(0)
         self.andyMark_L.setBounds(
             max=2500, deadbandMax=1500, center=1500, deadbandMin=1500, min=500
@@ -23,48 +26,6 @@ class ReefscapeRobot(wpilib.TimedRobot):
         self.andyMark_R.setBounds(
             max=2500, deadbandMax=1500, center=1500, deadbandMin=1500, min=500
         )
-
-
-        # Initializing Left MOTOR
-        # self.ClimberMotorLeft = rev.SparkMax(1, rev.SparkMax.MotorType.kBrushless)
-        # self.ClimberMotorLeft.set(0.0)
-
-        # ClimberMotorLeftConfig = rev.SparkBaseConfig()
-        # ClimberMotorLeftConfig.inverted(True)
-        # self.ClimberMotorLeft.configure(
-        #     ClimberMotorLeftConfig,
-        #     rev.SparkMax.ResetMode.kNoResetSafeParameters,
-        #     rev.SparkMax.PersistMode.kNoPersistParameters,
-        # )
-
-        # Initializing Right MOTOR
-        # self.ClimberMotorRight = rev.SparkMax(2, rev.SparkMax.MotorType.kBrushless)
-        # self.ClimberMotorRight.set(0.0)
-
-        # ClimberMotorRightConfig = rev.SparkBaseConfig()
-        # ClimberMotorRightConfig.inverted(True)
-        # self.ClimberMotorRight.configure(
-        #     ClimberMotorRightConfig,
-        #     rev.SparkMax.ResetMode.kNoResetSafeParameters,
-        #     rev.SparkMax.PersistMode.kNoPersistParameters,
-        # )
-
-
-        # Initializing Left ENCODER
-        # self.encoderDude_L = wpilib.DutyCycleEncoder(2)
-        # self.encoderDude_L.setAssumedFrequency(wpimath.units.hertz(975.6))
-        # self.encoderDude_L.setDutyCycleRange(min=1 / 1025, max=1024 / 1025)
-        # self.encoderDude_L.setInverted(True)
-        # self.encoderDude_L = self.ClimberMotorLeft.getAbsoluteEncoder()
-
-        # Initializing Right ENCODER
-        # self.encoderDude_R = wpilib.DutyCycleEncoder(3)
-        # self.encoderDude_R.setAssumedFrequency(wpimath.units.hertz(975.6))
-        # self.encoderDude_R.setDutyCycleRange(min=1 / 1025, max=1024 / 1025)
-        # self.encoderDude_R.setInverted(True)
-        # self.encoderDude_R = self.ClimberMotorRight.getAbsoluteEncoder()
-
-       
 
         # Initializing girly pop climbgal left
         self.Climbgal_L = climb_mechanism.climb_mechanism(
@@ -85,7 +46,6 @@ class ReefscapeRobot(wpilib.TimedRobot):
         self.Climbgal_R.teleopInit()
 
     def teleopPeriodic(self):
-        
         if self.pxn_fightstick.getRawButtonPressed(9):
             print("button 9")
             self.Climbgal_L.climb()
@@ -131,7 +91,7 @@ class ReefscapeRobot(wpilib.TimedRobot):
         self.sd_table.putNumber("climber_R_motor_cmd", joystickAxis_R)
         self.sd_table.putNumber("climber_L_motor_cmd", joystickAxis_L)
 
-        ### DISENGAGING AND ENGAGING RATCHET??? ### 
+        ### DISENGAGING AND ENGAGING RATCHET??? ###
         ratchet_engage_L = self.sd_table.getBoolean("ratchet_engage_L", False)
         ratchet_engage_R = self.sd_table.getBoolean("ratchet_engage_R", False)
         # Getting T/F from Network table
@@ -150,6 +110,7 @@ class ReefscapeRobot(wpilib.TimedRobot):
 
         if self.pxn_fightstick.getRawButtonPressed(8):
             self.Climbgal_R.findHomePosition()
+
 
 if __name__ == "__main__":
     wpilib.run(ReefscapeRobot)
