@@ -9,32 +9,29 @@ import rev
 
 class ReefscapeRobot(wpilib.TimedRobot):
 
-    #TODO: Would be good to put a bunch of constants here that contain all the port and CAN ID definitions. It keeps all that information together and easy to find.
     def robotInit(self):
+        
+        RATCHET_SERVO_L_ID = 0
+        RATCHET_SERVO_R_ID = 1
+        CLIMB_MOTOR_L_ID = 61
+        CLIMB_MOTOR_R_ID = 62
+
         self.pxn_fightstick = wpilib.Joystick(1)
         self.goodStick = wpilib.XboxController(0)
 
-        # Initializing Left SERVO
-        #TODO: Since the function of the climbers depends on this specific ratchet/servo combination, it would really be more appropriate to move servo initialization into the climber_mechanism class (in the same way we moved the motor config).
-        self.andyMark_L = wpilib.Servo(0)
-        self.andyMark_L.setBounds(
-            max=2500, deadbandMax=1500, center=1500, deadbandMin=1500, min=500
-        )
-
-        # Initializing Right SERVO
-        self.andyMark_R = wpilib.Servo(1)
-        self.andyMark_R.setBounds(
-            max=2500, deadbandMax=1500, center=1500, deadbandMin=1500, min=500
-        )
+       
+       
 
         # Initializing girly pop climbgal left
+        self.TARGET_POSITION_ARMED_L = -0.05   
         self.Climbgal_L = climb_mechanism.climb_mechanism(
-            self.andyMark_L, 61, "climber_L"
+            RATCHET_SERVO_L_ID, CLIMB_MOTOR_L_ID, "climber_L"
         )
 
         # Initializing girly pop climbgal right
+        self.TARGET_POSITION_ARMED_R = -0.05   
         self.Climbgal_R = climb_mechanism.climb_mechanism(
-            self.andyMark_R, 62, "climber_R"
+            RATCHET_SERVO_R_ID, CLIMB_MOTOR_R_ID, "climber_R"
         )
 
         # Network tables are used for Test Mode
@@ -105,11 +102,11 @@ class ReefscapeRobot(wpilib.TimedRobot):
         else:
             self.Climbgal_R.__disengageRatchet__()
 
-        if self.pxn_fightstick.getRawButtonPressed(7):
-            self.Climbgal_L.findHomePosition()
+        # if self.pxn_fightstick.getRawButtonPressed(7):
+        #     self.Climbgal_L.findHomePosition()
 
-        if self.pxn_fightstick.getRawButtonPressed(8):
-            self.Climbgal_R.findHomePosition()
+        # if self.pxn_fightstick.getRawButtonPressed(8):
+        #     self.Climbgal_R.findHomePosition()
 
 
 if __name__ == "__main__":
