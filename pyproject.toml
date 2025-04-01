@@ -30,6 +30,4 @@ robotpy_extras = [
 
 # Other pip packages to install
 requires = [
-    "pygeoif",
-    "pyclipper"
 ]

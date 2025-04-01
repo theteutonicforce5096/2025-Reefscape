@@ -1,4 +1,0 @@
-{
-    "comment": "Stubs generated using pybind11-stubgen.",
-    "python.analysis.stubPath": "./stubs"
-}
