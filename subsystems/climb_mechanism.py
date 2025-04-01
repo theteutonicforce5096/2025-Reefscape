@@ -14,11 +14,14 @@ from wpimath.trajectory import TrapezoidProfile
 class climb_mechanism:
     GEARRATIO = 155.6
     CURRENT_LIMIT_WEAK = 4  # Amps
-    CURRENT_LIMIT_STRONG = 12  # Amps
+    CURRENT_LIMIT_STRONG = 40  # Amps
     RATCHET_MOVE_TIME = 1.25  # seconds
     RATCHET_TIMER_AMOUNT = 1  # seconds
-    MAX_ACCEL = 0.14  # encoder units per second^2
-    MAX_SPEED = 0.25  # encoder units per second
+    MAX_ACCEL_CLIMB = 0.14  # encoder units per second^2
+    MAX_ACCEL_RESET = 0.3
+    MAX_SPEED_CLIMB = 0.25
+    MAX_SPEED_RESET = 0.5
+      # encoder units per second
     # MAX_POSITION = -0.45  # encoder
     # MIN_POSITION = -0.02  # encoder
     # ^^^^^ Used for Motor encoder- not absolute
@@ -58,10 +61,14 @@ class climb_mechanism:
         self.TARGET_POSITION_ARMED = TARGET_POSITION_ARMED
 
         # Initializing PID
-        constraints = TrapezoidProfile.Constraints(
-            maxVelocity=self.MAX_SPEED, maxAcceleration=self.MAX_ACCEL
+        self.constraints_CLIMB = TrapezoidProfile.Constraints(
+            maxVelocity=self.MAX_SPEED_CLIMB, maxAcceleration=self.MAX_ACCEL_CLIMB
         )
-        self.PID = ProfiledPIDController(5, 0, 0, constraints=constraints)
+        self.constraints_RESET = TrapezoidProfile.Constraints(
+            maxVelocity=self.MAX_SPEED_RESET, maxAcceleration=self.MAX_ACCEL_RESET
+        )
+        self.PID = ProfiledPIDController(10, 0, 0, constraints=self.constraints_CLIMB)
+        
 
         # Initalizing Encoder - We are using absolute
         self.motor_encoder = self.ClimberMotor.getEncoder()
@@ -119,8 +126,8 @@ class climb_mechanism:
         self.andyMark.setPosition(engage_position)
 
     def climb(self):
+        self.PID.setConstraints(self.constraints_CLIMB)
         self.PID.setGoal(self.TARGET_POSITION_LIFT)
-
         # Negative value is the climb direction while positive is the reset.
 
     def reset(self):
@@ -170,6 +177,7 @@ class climb_mechanism:
         if self.ratchet_timer.isRunning():
             if self.ratchet_timer.hasElapsed(self.RATCHET_TIMER_AMOUNT):
                 self.ratchet_timer.stop()
+                self.PID.setConstraints(self.constraints_RESET)
                 self.PID.setGoal(self.TARGET_POSITION_ARMED)
 
     def motorDirect(self, motorSpeed: float):
