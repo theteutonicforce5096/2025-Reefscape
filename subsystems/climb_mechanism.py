@@ -16,14 +16,14 @@ class climb_mechanism:
     CURRENT_LIMIT_WEAK = 4  # Amps
     CURRENT_LIMIT_STRONG = 12  # Amps
     RATCHET_MOVE_TIME = 1.25  # seconds
-    TARGET_POSITION_LIFT = -0.42  # encoder
     RATCHET_TIMER_AMOUNT = 1  # seconds
     MAX_ACCEL = 0.14  # encoder units per second^2
-    MAX_SPEED = 0.14  # encoder units per second
-    MAX_POSITION = -0.45  # encoder
-    MIN_POSITION = -0.02  # encoder
+    MAX_SPEED = 0.25  # encoder units per second
+    # MAX_POSITION = -0.45  # encoder
+    # MIN_POSITION = -0.02  # encoder
+    # ^^^^^ Used for Motor encoder- not absolute
 
-    def __init__(self, servo_PWM_ID: int, motor_CAN_ID: int, dashboard_prefix: str):
+    def __init__(self, servo_PWM_ID: int, motor_CAN_ID: int, dashboard_prefix: str, TARGET_POSITION_LIFT: float, TARGET_POSITION_ARMED: float):
         self.nt_rel_enc_value = dashboard_prefix + "_rel_enc"
         self.nt_abs_enc_value = dashboard_prefix + "_abs_enc"
         self.nt_motor_cmd_value = dashboard_prefix + "_motor_cmd"
@@ -52,6 +52,10 @@ class climb_mechanism:
         self.andyMark.setBounds(
             max=2500, deadbandMax=1500, center=1500, deadbandMin=1500, min=500
         )
+
+        # Initializing TARGET POSITIONS
+        self.TARGET_POSITION_LIFT = TARGET_POSITION_LIFT
+        self.TARGET_POSITION_ARMED = TARGET_POSITION_ARMED
 
         # Initializing PID
         constraints = TrapezoidProfile.Constraints(
@@ -154,8 +158,8 @@ class climb_mechanism:
         # it will change it to 0.1 and if it is lower it will keep it there. This is a speed limit btw
 
         if (
-            self.getAbsoluteEncoderPosition() > self.MIN_POSITION
-            or self.getAbsoluteEncoderPosition() < self.MAX_POSITION
+            self.getAbsoluteEncoderPosition() > self.TARGET_POSITION_ARMED
+            or self.getAbsoluteEncoderPosition() < self.TARGET_POSITION_LIFT
         ):
             self.ClimberMotor.set(0.0)
         self.ClimberMotor.set(Motor_cmd)

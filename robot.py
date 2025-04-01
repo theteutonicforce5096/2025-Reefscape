@@ -23,15 +23,25 @@ class ReefscapeRobot(wpilib.TimedRobot):
        
 
         # Initializing girly pop climbgal left
-        self.TARGET_POSITION_ARMED_L = -0.05   
+        self.TARGET_POSITION_ARMED_L = 0.411
+        self.TARGET_POSITION_LIFT_L = -0.201
+        # Range of 0.612
         self.Climbgal_L = climb_mechanism.climb_mechanism(
-            RATCHET_SERVO_L_ID, CLIMB_MOTOR_L_ID, "climber_L"
+            RATCHET_SERVO_L_ID, CLIMB_MOTOR_L_ID, "climber_L", 
+            self.TARGET_POSITION_LIFT_L, 
+            self.TARGET_POSITION_ARMED_L
         )
 
+
         # Initializing girly pop climbgal right
-        self.TARGET_POSITION_ARMED_R = -0.05   
+        self.TARGET_POSITION_ARMED_R = 0.599   
+        self.TARGET_POSITION_LIFT_R = -0.007
+        # Range of 0.606
         self.Climbgal_R = climb_mechanism.climb_mechanism(
-            RATCHET_SERVO_R_ID, CLIMB_MOTOR_R_ID, "climber_R"
+            RATCHET_SERVO_R_ID, CLIMB_MOTOR_R_ID,
+            "climber_R", 
+            self.TARGET_POSITION_LIFT_R, 
+            self.TARGET_POSITION_ARMED_R
         )
 
         # Network tables are used for Test Mode
@@ -41,6 +51,9 @@ class ReefscapeRobot(wpilib.TimedRobot):
     def teleopInit(self):
         self.Climbgal_L.teleopInit()
         self.Climbgal_R.teleopInit()
+
+        self.Climbgal_L.reset()
+        self.Climbgal_R.reset()
 
     def teleopPeriodic(self):
         if self.pxn_fightstick.getRawButtonPressed(9):
