@@ -1,15 +1,22 @@
-from enum import Enum, auto
+import commands2
 import wpilib
+from enum import Enum, auto
+
 from wpilib import Joystick
 from networktables import NetworkTables
-from subsystems import climb_mechanism
 import wpimath
 import rev
 
+from robot_container import RobotContainer
+from subsystems import climb_mechanism
 
-class ReefscapeRobot(wpilib.TimedRobot):
-
+class ReefscapeRobot(commands2.TimedCommandRobot):
+    """
+    Robot for Team 5096.
+    """
+    
     def robotInit(self):
+        self.container = RobotContainer()
 
         RATCHET_SERVO_L_ID = 0
         RATCHET_SERVO_R_ID = 1
@@ -46,8 +53,23 @@ class ReefscapeRobot(wpilib.TimedRobot):
         # Network tables are used for Test Mode
         NetworkTables.initialize(server="roborio-5096-frc.local")
         self.sd_table = NetworkTables.getTable("SmartDashboard")
+    
+    def robotPeriodic(self):
+        commands2.CommandScheduler.getInstance().run()
+        
+    def autonomousInit(self):
+        commands2.CommandScheduler.getInstance().cancelAll()
+
+    def autonomousPeriodic(self):
+        pass
+
+    def autonomousExit(self):
+        commands2.CommandScheduler.getInstance().cancelAll()
 
     def teleopInit(self):
+        commands2.CommandScheduler.getInstance().cancelAll()
+        self.container.configure_button_bindings_teleop()
+        
         self.Climbgal_L.teleopInit()
         self.Climbgal_R.teleopInit()
 
@@ -66,13 +88,11 @@ class ReefscapeRobot(wpilib.TimedRobot):
 
         self.Climbgal_L.periodic()
         self.Climbgal_R.periodic()
-
-    def teleopExit(self):
-        pass
-
-    ### TEST MODE STUFF ###
-
+    
     def testInit(self):
+        commands2.CommandScheduler.getInstance().cancelAll()
+        self.container.configure_button_bindings_test()
+        
         self.Climbgal_L.stop()
         self.Climbgal_R.stop()
         self.Climbgal_R.testInit()
@@ -119,7 +139,9 @@ class ReefscapeRobot(wpilib.TimedRobot):
 
         # if self.pxn_fightstick.getRawButtonPressed(8):
         #     self.Climbgal_R.findHomePosition()
-
+        
+   def testExit(self):
+        commands2.CommandScheduler.getInstance().cancelAll()
 
 if __name__ == "__main__":
     wpilib.run(ReefscapeRobot)
