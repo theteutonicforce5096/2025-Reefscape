@@ -10,7 +10,7 @@ import rev
 class ReefscapeRobot(wpilib.TimedRobot):
 
     def robotInit(self):
-        
+
         RATCHET_SERVO_L_ID = 0
         RATCHET_SERVO_R_ID = 1
         CLIMB_MOTOR_L_ID = 61
@@ -19,29 +19,28 @@ class ReefscapeRobot(wpilib.TimedRobot):
         self.pxn_fightstick = wpilib.Joystick(1)
         self.goodStick = wpilib.XboxController(0)
 
-       
-       
-
         # Initializing girly pop climbgal left
         self.TARGET_POSITION_ARMED_L = 0.411
         self.TARGET_POSITION_LIFT_L = -0.201
         # Range of 0.612
         self.Climbgal_L = climb_mechanism.climb_mechanism(
-            RATCHET_SERVO_L_ID, CLIMB_MOTOR_L_ID, "climber_L", 
-            self.TARGET_POSITION_LIFT_L, 
-            self.TARGET_POSITION_ARMED_L
+            RATCHET_SERVO_L_ID,
+            CLIMB_MOTOR_L_ID,
+            "climber_L",
+            self.TARGET_POSITION_LIFT_L,
+            self.TARGET_POSITION_ARMED_L,
         )
 
-
         # Initializing girly pop climbgal right
-        self.TARGET_POSITION_ARMED_R = 0.599   
+        self.TARGET_POSITION_ARMED_R = 0.599
         self.TARGET_POSITION_LIFT_R = -0.007
         # Range of 0.606
         self.Climbgal_R = climb_mechanism.climb_mechanism(
-            RATCHET_SERVO_R_ID, CLIMB_MOTOR_R_ID,
-            "climber_R", 
-            self.TARGET_POSITION_LIFT_R, 
-            self.TARGET_POSITION_ARMED_R
+            RATCHET_SERVO_R_ID,
+            CLIMB_MOTOR_R_ID,
+            "climber_R",
+            self.TARGET_POSITION_LIFT_R,
+            self.TARGET_POSITION_ARMED_R,
         )
 
         # Network tables are used for Test Mode

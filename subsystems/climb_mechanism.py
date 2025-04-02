@@ -21,12 +21,16 @@ class climb_mechanism:
     MAX_ACCEL_RESET = 0.3
     MAX_SPEED_CLIMB = 0.25
     MAX_SPEED_RESET = 0.5
-      # encoder units per second
-    # MAX_POSITION = -0.45  # encoder
-    # MIN_POSITION = -0.02  # encoder
     # ^^^^^ Used for Motor encoder- not absolute
 
-    def __init__(self, servo_PWM_ID: int, motor_CAN_ID: int, dashboard_prefix: str, TARGET_POSITION_LIFT: float, TARGET_POSITION_ARMED: float):
+    def __init__(
+        self,
+        servo_PWM_ID: int,
+        motor_CAN_ID: int,
+        dashboard_prefix: str,
+        TARGET_POSITION_LIFT: float,
+        TARGET_POSITION_ARMED: float,
+    ):
         self.nt_rel_enc_value = dashboard_prefix + "_rel_enc"
         self.nt_abs_enc_value = dashboard_prefix + "_abs_enc"
         self.nt_motor_cmd_value = dashboard_prefix + "_motor_cmd"
@@ -68,7 +72,6 @@ class climb_mechanism:
             maxVelocity=self.MAX_SPEED_RESET, maxAcceleration=self.MAX_ACCEL_RESET
         )
         self.PID = ProfiledPIDController(10, 0, 0, constraints=self.constraints_CLIMB)
-        
 
         # Initalizing Encoder - We are using absolute
         self.motor_encoder = self.ClimberMotor.getEncoder()
@@ -105,7 +108,7 @@ class climb_mechanism:
 
         self.last_encoder_val = current_encoder_val
 
-        return (current_encoder_val + self.absolute_enc_offset)
+        return current_encoder_val + self.absolute_enc_offset
 
     # def getArmPosition(self):
     #     # This is all good we jsut need the home position defined
