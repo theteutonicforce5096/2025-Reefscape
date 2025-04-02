@@ -12,7 +12,7 @@ class RobotContainer:
         
     def configure_button_bindings_teleop(self):
         self.elevator.setDefaultCommand(
-            self.elevator.run(lambda: self.elevator.spin_motor(0))
+            self.elevator.run(lambda: self.elevator.run_pid())
         )
         
         self.wrist.setDefaultCommand(
@@ -25,6 +25,14 @@ class RobotContainer:
         
         self.controller.povDown().whileTrue(
             self.elevator.run(lambda: self.elevator.spin_motor(-0.1))
+        )
+
+        self.controller.povRight().whileTrue(
+            self.elevator.run(lambda: self.elevator.raise_setpoint())
+        )
+
+        self.controller.povLeft().whileTrue(
+            self.elevator.run(lambda: self.elevator.lower_setpoint())
         )
         
         self.controller.x().onTrue(

@@ -16,7 +16,7 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         commands2.CommandScheduler.getInstance().cancelAll()
 
     def autonomousPeriodic(self):
-        pass
+        self.container.elevator.run_pid()
 
     def autonomousExit(self):
         commands2.CommandScheduler.getInstance().cancelAll()
@@ -26,7 +26,7 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         self.container.configure_button_bindings_teleop()
 
     def teleopPeriodic(self):
-        pass
+        self.container.elevator.run_pid()
 
     def teleopExit(self):
         commands2.CommandScheduler.getInstance().cancelAll()
