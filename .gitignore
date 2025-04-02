@@ -1,10 +1,5 @@
-.pytest_cache
-.wpilib
-__pycache__
-/autonomous/__pycache__
-/photonlibpy/__pycache__
-/subsystems/__pycache__
-/tests/__pycache__
-/tests/.pytest_cache
-/tests/ctre_sim
-*.wpilog
+.DS_Store
+__pycache__/
+.pytest_cache/
+/*/__pycache__/
+ctre_sim/
