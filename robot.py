@@ -1,13 +1,9 @@
 import commands2
 import wpilib
-from enum import Enum, auto
-
-from wpilib import Joystick
 from networktables import NetworkTables
-import wpimath
-import rev
 
 from robot_container import RobotContainer
+
 from subsystems import climb_mechanism
 
 class ReefscapeRobot(commands2.TimedCommandRobot):
@@ -140,7 +136,7 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         # if self.pxn_fightstick.getRawButtonPressed(8):
         #     self.Climbgal_R.findHomePosition()
         
-   def testExit(self):
+    def testExit(self):
         commands2.CommandScheduler.getInstance().cancelAll()
 
 if __name__ == "__main__":
