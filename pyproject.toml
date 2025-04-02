@@ -13,7 +13,7 @@ robotpy_version = "2025.3.2.0"
 robotpy_extras = [
     # "all"
     "apriltag",
-    # "commands2",
+    "commands2",
     # "cscore",
     # "navx",
     # "pathplannerlib",
@@ -27,4 +27,6 @@ robotpy_extras = [
 ]
 
 # Other pip packages to install
-requires = ["pynetworktables"]
+requires = [
+    "pynetworktables"
+]
