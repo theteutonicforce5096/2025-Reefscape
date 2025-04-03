@@ -61,8 +61,25 @@ class climb_mechanism:
         )
 
         # Initializing TARGET POSITIONS
+       
+#  read absolute encoder
+#         compare the value to the arm position limit- it better be higher because if it isnt we need to add one
+#         flip side for climb position
+
+
+        # Because of aliasing, we need to make sure that the climber limits are
+        # above and less than respectively our current position, IF NOT, adjust
+     
+        cur_position = self.absolute_encoder.getPosition()
         self.TARGET_POSITION_LIFT = TARGET_POSITION_LIFT
         self.TARGET_POSITION_ARMED = TARGET_POSITION_ARMED
+        if cur_position > TARGET_POSITION_ARMED:
+            self.TARGET_POSITION_ARMED +=1
+        if cur_position < TARGET_POSITION_LIFT:
+            self.TARGET_POSITION_LIFT -=1
+
+         
+        
 
         # Initializing PID
         self.constraints_CLIMB = TrapezoidProfile.Constraints(
@@ -92,6 +109,10 @@ class climb_mechanism:
         self.sd_table = NetworkTables.getTable("SmartDashboard")
 
         self.home_finding_mode = False
+
+       
+
+        
 
     def getMotorEncoderPosition(self) -> float:
         return self.motor_encoder.getPosition()
