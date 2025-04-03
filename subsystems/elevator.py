@@ -1,7 +1,7 @@
 from commands2 import Subsystem
 import rev
 from commands2.cmd import print_
-from wpimath.controller import ProfiledPIDController
+from wpimath.controller import ProfiledPIDController, PIDController
 from wpimath.trajectory import TrapezoidProfile
 from wpimath.controller import ElevatorFeedforward
 from networktables import NetworkTables
@@ -30,10 +30,10 @@ class Elevator(Subsystem):
             rev.SparkBase.PersistMode.kNoPersistParameters
         )
         
-        self.pid_controller = ProfiledPIDController(1, 0, 0, TrapezoidProfile.Constraints(1.0, 1.0))
-        self.feedforward = ElevatorFeedforward(0.2, 0, 0, 0)
+        self.pid_controller = ProfiledPIDController(.1, 0, .001, TrapezoidProfile.Constraints(14, 16))
+        self.feedforward = ElevatorFeedforward(0.2, 2, 0, 0)
                 
-        self.setpoint = 0.00
+        self.setpoint = 0
 
         self.encoder.setPosition(0.0)
                 
@@ -61,3 +61,14 @@ class Elevator(Subsystem):
     def lower_setpoint(self):
         if self.setpoint >= 1:
             self.setpoint -= 1
+
+    def raise_setpoint_small(self):
+        if self.setpoint < 80:
+            self.setpoint += 1
+        
+    def lower_setpoint_small(self):
+        if self.setpoint >= 1:
+            self.setpoint -= 1
+
+    def set_setpoint(self, setpoint):
+        self.setpoint = setpoint
