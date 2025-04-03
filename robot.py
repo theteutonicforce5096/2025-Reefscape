@@ -23,27 +23,27 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         self.goodStick = wpilib.XboxController(0)
 
         # Initializing girly pop climbgal left
-        self.TARGET_POSITION_ARMED_L = 0.411
-        self.TARGET_POSITION_LIFT_L = -0.201
+        self.ABSOLUTE_MAX_POSITION_L = 0.03
+        self.ABSOLUTE_MIN_POSITION_L = 0.364
         # Range of 0.612
         self.Climbgal_L = climb_mechanism.climb_mechanism(
             RATCHET_SERVO_L_ID,
             CLIMB_MOTOR_L_ID,
             "climber_L",
-            self.TARGET_POSITION_LIFT_L,
-            self.TARGET_POSITION_ARMED_L,
+            self.ABSOLUTE_MIN_POSITION_L,
+            self.ABSOLUTE_MAX_POSITION_L,
         )
 
         # Initializing girly pop climbgal right
-        self.TARGET_POSITION_ARMED_R = 0.599
-        self.TARGET_POSITION_LIFT_R = -0.007
+        self.ABSOLUTE_MAX_POSITION_R = 0.801
+        self.ABSOLUTE_MIN_POSITION_R = 0.144
         # Range of 0.606
         self.Climbgal_R = climb_mechanism.climb_mechanism(
             RATCHET_SERVO_R_ID,
             CLIMB_MOTOR_R_ID,
             "climber_R",
-            self.TARGET_POSITION_LIFT_R,
-            self.TARGET_POSITION_ARMED_R,
+            self.ABSOLUTE_MIN_POSITION_R,
+            self.ABSOLUTE_MAX_POSITION_R,
         )
 
         # Network tables are used for Test Mode

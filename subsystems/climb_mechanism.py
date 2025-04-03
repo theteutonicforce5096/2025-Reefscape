@@ -28,14 +28,19 @@ class climb_mechanism:
         servo_PWM_ID: int,
         motor_CAN_ID: int,
         dashboard_prefix: str,
-        TARGET_POSITION_LIFT: float,
-        TARGET_POSITION_ARMED: float,
+        ABSOLUTE_MIN_POSITION: float,
+        ABSOLUTE_MAX_POSITION: float,
     ):
         self.nt_rel_enc_value = dashboard_prefix + "_rel_enc"
         self.nt_abs_enc_value = dashboard_prefix + "_abs_enc"
         self.nt_motor_cmd_value = dashboard_prefix + "_motor_cmd"
 
         # Initializing Everything!!!
+
+
+        # Initializing abs encoder and motor encoder
+       
+        
 
         # Build a motor config structure
         # Give is persistence with the object because we will use it
@@ -60,6 +65,9 @@ class climb_mechanism:
             max=2500, deadbandMax=1500, center=1500, deadbandMin=1500, min=500
         )
 
+        self.motor_encoder = self.ClimberMotor.getEncoder()
+        self.absolute_encoder = self.ClimberMotor.getAbsoluteEncoder()
+
         # Initializing TARGET POSITIONS
        
 #  read absolute encoder
@@ -71,12 +79,22 @@ class climb_mechanism:
         # above and less than respectively our current position, IF NOT, adjust
      
         cur_position = self.absolute_encoder.getPosition()
-        self.TARGET_POSITION_LIFT = TARGET_POSITION_LIFT
-        self.TARGET_POSITION_ARMED = TARGET_POSITION_ARMED
-        if cur_position > TARGET_POSITION_ARMED:
-            self.TARGET_POSITION_ARMED +=1
-        if cur_position < TARGET_POSITION_LIFT:
+      
+        self.TARGET_POSITION_LIFT = ABSOLUTE_MIN_POSITION
+        self.TARGET_POSITION_LIFT += 0.03
+        self.TARGET_POSITION_ARMED = ABSOLUTE_MAX_POSITION
+        self.TARGET_POSITION_ARMED -= 0.03
+        # ^^^^ This code is here to prevent the encoder from trying to go all the way around when
+        # ^^^^ it starts in between the ARMED position and the ABS MAX position
+    
+        if cur_position > ABSOLUTE_MAX_POSITION:
+            self.TARGET_POSITION_ARMED += 1
+        if cur_position < ABSOLUTE_MIN_POSITION:
             self.TARGET_POSITION_LIFT -=1
+        print(f"arm_limit {self.TARGET_POSITION_ARMED:0.3f}")
+        print(f"arm_limit (lift) {self.TARGET_POSITION_LIFT: 0.3f}")
+        # ^^^^ The f string allows us to format the print statement how we want
+        # ^^^^ 0.3f means 3 numbers after the decimal; f = float
 
          
         
@@ -91,8 +109,7 @@ class climb_mechanism:
         self.PID = ProfiledPIDController(10, 0, 0, constraints=self.constraints_CLIMB)
 
         # Initalizing Encoder - We are using absolute
-        self.motor_encoder = self.ClimberMotor.getEncoder()
-        self.absolute_encoder = self.ClimberMotor.getAbsoluteEncoder()
+      
         self.last_encoder_val = self.absolute_encoder.getPosition()
         self.absolute_enc_offset = 0.0
 
