@@ -1,6 +1,5 @@
 from commands2 import Subsystem
 import rev
-from commands2.cmd import print_
 from wpimath.controller import ProfiledPIDController, PIDController
 from wpimath.trajectory import TrapezoidProfile
 from wpimath.controller import ElevatorFeedforward
@@ -30,16 +29,22 @@ class Elevator(Subsystem):
             rev.SparkBase.PersistMode.kNoPersistParameters
         )
         
-        self.pid_controller = ProfiledPIDController(.1, 0, .001, TrapezoidProfile.Constraints(14, 16))
-        self.feedforward = ElevatorFeedforward(0.2, 2, 0, 0)
-                
+        self.pid_controller = ProfiledPIDController(0.04, 0, 0, TrapezoidProfile.Constraints(20, 40))
+        self.feedforward = ElevatorFeedforward(0.001, 0.02, 0, 0)
+                        
+        self.encoder.setPosition(0.0)
         self.setpoint = 0
 
+    def reset_setpoint(self):
         self.encoder.setPosition(0.0)
-                
+        self.setpoint = 0
+
     def run_pid(self):
         current_position = self.encoder.getPosition()
-        output = self.pid_controller.calculate(current_position, self.setpoint)
+        pid_output = self.pid_controller.calculate(current_position, self.setpoint)
+        feedforward = self.feedforward.calculate((self.encoder.getVelocity() * (1.067/120)) / 60)
+        output = pid_output + feedforward
+
         self.spin_motor(output)
         self.sd_table.putNumber(
             'elevator_motor', output
@@ -55,18 +60,10 @@ class Elevator(Subsystem):
         self.motor.set(percent)
     
     def raise_setpoint(self):
-        if self.setpoint < 120:
+        if self.setpoint < 100:
             self.setpoint += 1
         
     def lower_setpoint(self):
-        if self.setpoint >= 1:
-            self.setpoint -= 1
-
-    def raise_setpoint_small(self):
-        if self.setpoint < 80:
-            self.setpoint += 1
-        
-    def lower_setpoint_small(self):
         if self.setpoint >= 1:
             self.setpoint -= 1
 

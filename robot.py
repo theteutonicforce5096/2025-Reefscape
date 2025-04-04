@@ -23,8 +23,8 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         self.goodStick = wpilib.XboxController(1)
 
         # Initializing girly pop climbgal left
-        self.ABSOLUTE_MAX_POSITION_L = 0.03
-        self.ABSOLUTE_MIN_POSITION_L = 0.364
+        self.ABSOLUTE_MAX_POSITION_L = 0.350204616785049
+        self.ABSOLUTE_MIN_POSITION_L = -0.287883698940277
         # Range of 0.612
         self.Climbgal_L = climb_mechanism.climb_mechanism(
             RATCHET_SERVO_L_ID,
@@ -35,8 +35,8 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         )
 
         # Initializing girly pop climbgal right
-        self.ABSOLUTE_MAX_POSITION_R = 0.801
-        self.ABSOLUTE_MIN_POSITION_R = 0.144
+        self.ABSOLUTE_MAX_POSITION_R = 0.800914824008942
+        self.ABSOLUTE_MIN_POSITION_R = 0.14428836107254
         # Range of 0.606
         self.Climbgal_R = climb_mechanism.climb_mechanism(
             RATCHET_SERVO_R_ID,
@@ -55,6 +55,7 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         
     def autonomousInit(self):
         commands2.CommandScheduler.getInstance().cancelAll()
+        self.container.configure_button_bindings_auto()
 
     def autonomousPeriodic(self):
         pass
@@ -73,18 +74,16 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         # self.Climbgal_R.reset()
 
     def teleopPeriodic(self):
+        self.container.elevator.run_pid()
+        # self.Climbgal_L.periodic()
+        # self.Climbgal_R.periodic()
+
         # if self.pxn_fightstick.getRawButtonPressed(9):
-        #     print("button 9")
         #     self.Climbgal_L.climb()
         #     self.Climbgal_R.climb()
         # if self.pxn_fightstick.getRawButtonPressed(10):
-        #     print("button 10")
         #     self.Climbgal_L.reset()
         #     self.Climbgal_R.reset()
-
-        # self.Climbgal_L.periodic()
-        # self.Climbgal_R.periodic()
-        self.container.elevator.run_pid()
 
     def teleopExit(self):
         commands2.CommandScheduler.getInstance().cancelAll()
@@ -127,12 +126,6 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         else:
             self.Climbgal_R.__disengageRatchet__()
 
-        if self.pxn_fightstick.getRawButtonPressed(7):
-            self.Climbgal_L.findHomePosition()
-
-        if self.pxn_fightstick.getRawButtonPressed(8):
-            self.Climbgal_R.findHomePosition()
-        
     def testExit(self):
         commands2.CommandScheduler.getInstance().cancelAll()
 

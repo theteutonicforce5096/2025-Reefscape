@@ -76,14 +76,14 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         self.max_angular_rate = max_angular_rate
 
         # Register telemetry function in swerve drive
-        self.register_telemetry(lambda state: self._odometry_thread_target(state))
+        # self.register_telemetry(lambda state: self._odometry_thread_target(state))
 
         # Create vision thread and thread lock
         self.vision_thread = threading.Thread(target = self._vision_thread_target, daemon = True)
         self.thread_lock = threading.Lock()
 
         # Start vision thread
-        self.vision_thread.start()
+        # self.vision_thread.start()
 
         # Create Field2d Widget and add it to Shuffleboard
         self.field2d = Field2d()
@@ -112,9 +112,9 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         )
 
         # Create slew rate limiters for limiting robot acceleration
-        self.straight_speed_limiter = SlewRateLimiter(self.max_linear_speed * 4, -self.max_linear_speed * 4)
-        self.strafe_speed_limiter = SlewRateLimiter(self.max_linear_speed * 4, -self.max_linear_speed * 4)
-        self.rotation_speed_limiter = SlewRateLimiter(self.max_angular_rate * 4, -self.max_angular_rate * 4)
+        self.straight_speed_limiter = SlewRateLimiter(self.max_linear_speed * 4, -self.max_linear_speed * 8)
+        self.strafe_speed_limiter = SlewRateLimiter(self.max_linear_speed * 4, -self.max_linear_speed * 8)
+        self.rotation_speed_limiter = SlewRateLimiter(self.max_angular_rate * 4, -self.max_angular_rate * 8)
 
         # Create Apply Robot Speeds Request for PathPlanner
         self.apply_robot_speeds_request = (
@@ -264,7 +264,6 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         :param state: State of the drivetrain
         :type state: swerve.SwerveDrivetrain.SwerveDriveState
         """
-
         # Get current pose of robot
         current_pose = state.pose
 

@@ -19,8 +19,8 @@ class climb_mechanism:
     RATCHET_TIMER_AMOUNT = 1  # seconds
     MAX_ACCEL_CLIMB = 0.14  # encoder units per second^2
     MAX_ACCEL_RESET = 0.3
-    MAX_SPEED_CLIMB = 0.25
-    MAX_SPEED_RESET = 0.5
+    MAX_SPEED_CLIMB = 0.125
+    MAX_SPEED_RESET = 0.25
     # ^^^^^ Used for Motor encoder- not absolute
 
     def __init__(
@@ -91,9 +91,9 @@ class climb_mechanism:
             self.TARGET_POSITION_ARMED += 1
         if cur_position < ABSOLUTE_MIN_POSITION:
             self.TARGET_POSITION_LIFT -=1
-        print(f"arm_limit {self.TARGET_POSITION_ARMED:0.3f}")
-        print(f"arm_limit (lift) {self.TARGET_POSITION_LIFT: 0.3f}")
-        # ^^^^ The f string allows us to format the print statement how we want
+        # print(f"arm_limit {self.TARGET_POSITION_ARMED:0.3f}")
+        # print(f"arm_limit (lift) {self.TARGET_POSITION_LIFT: 0.3f}")
+        # # ^^^^ The f string allows us to format the print statement how we want
         # ^^^^ 0.3f means 3 numbers after the decimal; f = float
 
          
