@@ -7,10 +7,14 @@ from pathplannerlib.auto import PathConstraints
 
 from phoenix6 import SignalLogger
 
+from subsystems.elevator import Elevator
+
 class RobotContainer:
     def __init__(self):
         # Initialize hardware
         self.drivetrain = SwerveDriveConstants.create_drivetrain()
+
+        self.elevator = Elevator(40)
 
         # Initialize controller
         self.controller = commands2.button.CommandXboxController(0)
@@ -43,6 +47,24 @@ class RobotContainer:
             )
         )
         
+        self.controller.povUp().whileTrue(
+            self.elevator.run(lambda: self.elevator.raise_setpoint())
+        )
+
+        self.controller.povDown().whileTrue(
+            self.elevator.run(lambda: self.elevator.lower_setpoint())
+        )
+
+        self.controller.povRight().whileTrue(
+            self.elevator.run(lambda: self.elevator.set_setpoint(20))
+        )
+
+        self.controller.povLeft().onTrue(
+            self.elevator.runOnce(
+                lambda: print(self.elevator.encoder.getPosition(), self.elevator.setpoint)
+            )
+        )
+
         # Set button binding for reseting field centric heading
         (self.controller.leftBumper() & self.controller.rightBumper() & self.controller.a()).onTrue(
             self.drivetrain.runOnce(lambda: self.drivetrain.seed_field_centric())

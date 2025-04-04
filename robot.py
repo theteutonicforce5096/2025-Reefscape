@@ -66,24 +66,25 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         commands2.CommandScheduler.getInstance().cancelAll()
         self.container.configure_button_bindings_teleop()
         
-        self.Climbgal_L.teleopInit()
-        self.Climbgal_R.teleopInit()
+        # self.Climbgal_L.teleopInit()
+        # self.Climbgal_R.teleopInit()
 
-        self.Climbgal_L.reset()
-        self.Climbgal_R.reset()
+        # self.Climbgal_L.reset()
+        # self.Climbgal_R.reset()
 
     def teleopPeriodic(self):
-        if self.pxn_fightstick.getRawButtonPressed(9):
-            print("button 9")
-            self.Climbgal_L.climb()
-            self.Climbgal_R.climb()
-        if self.pxn_fightstick.getRawButtonPressed(10):
-            print("button 10")
-            self.Climbgal_L.reset()
-            self.Climbgal_R.reset()
+        # if self.pxn_fightstick.getRawButtonPressed(9):
+        #     print("button 9")
+        #     self.Climbgal_L.climb()
+        #     self.Climbgal_R.climb()
+        # if self.pxn_fightstick.getRawButtonPressed(10):
+        #     print("button 10")
+        #     self.Climbgal_L.reset()
+        #     self.Climbgal_R.reset()
 
-        self.Climbgal_L.periodic()
-        self.Climbgal_R.periodic()
+        # self.Climbgal_L.periodic()
+        # self.Climbgal_R.periodic()
+        self.container.elevator.run_pid()
     
     def testInit(self):
         commands2.CommandScheduler.getInstance().cancelAll()
