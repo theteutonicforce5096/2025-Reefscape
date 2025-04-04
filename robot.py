@@ -19,8 +19,8 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         CLIMB_MOTOR_L_ID = 61
         CLIMB_MOTOR_R_ID = 62
 
-        self.pxn_fightstick = wpilib.Joystick(1)
-        self.goodStick = wpilib.XboxController(0)
+        self.pxn_fightstick = wpilib.Joystick(2)
+        self.goodStick = wpilib.XboxController(1)
 
         # Initializing girly pop climbgal left
         self.ABSOLUTE_MAX_POSITION_L = 0.03
@@ -85,6 +85,9 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         # self.Climbgal_L.periodic()
         # self.Climbgal_R.periodic()
         self.container.elevator.run_pid()
+
+    def teleopExit(self):
+        commands2.CommandScheduler.getInstance().cancelAll()
     
     def testInit(self):
         commands2.CommandScheduler.getInstance().cancelAll()
@@ -94,15 +97,8 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         self.Climbgal_R.stop()
         self.Climbgal_R.testInit()
         self.Climbgal_L.testInit()
-        # Testing the encoder
-        # self.encodingTimer.restart()
 
-        # The following code has to do with servcing the controls on the Test Mode screen of the custom dashboard
-        # Make sure motors are stopped
-
-        return super().testInit()
-
-    def testPeriodic(self):
+    def testPeriodic(self):    
         self.Climbgal_L.testPeriodic()
         self.Climbgal_R.testPeriodic()
 
@@ -131,11 +127,11 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         else:
             self.Climbgal_R.__disengageRatchet__()
 
-        # if self.pxn_fightstick.getRawButtonPressed(7):
-        #     self.Climbgal_L.findHomePosition()
+        if self.pxn_fightstick.getRawButtonPressed(7):
+            self.Climbgal_L.findHomePosition()
 
-        # if self.pxn_fightstick.getRawButtonPressed(8):
-        #     self.Climbgal_R.findHomePosition()
+        if self.pxn_fightstick.getRawButtonPressed(8):
+            self.Climbgal_R.findHomePosition()
         
     def testExit(self):
         commands2.CommandScheduler.getInstance().cancelAll()

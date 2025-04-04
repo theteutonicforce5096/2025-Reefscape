@@ -48,7 +48,7 @@ class SwerveDriveConstants:
     # Essentially used as stator current limit
     # https://v6.docs.ctr-electronics.com/en/2024/docs/api-reference/mechanisms/swerve/swerve-builder-api.html
     # https://v6.docs.ctr-electronics.com/en/latest/docs/hardware-reference/talonfx/improving-performance-with-current-limits.html#preventing-brownouts
-    _slip_current: units.ampere = 30.0 # 120.0
+    _slip_current: units.ampere = 60.0 # 120.0
 
     # Every 1 rotation of the azimuth results in _couple_ratio drive motor turns
     # https://www.chiefdelphi.com/t/kcoupleratio-in-ctre-swerve/483380
@@ -101,7 +101,12 @@ class SwerveDriveConstants:
 
     _encoder_initial_configs = configs.CANcoderConfiguration()
 
-    _pigeon_configs = configs.Pigeon2Configuration()
+    _pigeon_configs = configs.Pigeon2Configuration().with_mount_pose(
+        configs.MountPoseConfigs()
+        .with_mount_pose_yaw(-82.1805419921875)
+        .with_mount_pose_pitch(0.3210149109363556)
+        .with_mount_pose_roll(0.3210149109363556)
+    )
 
     # CAN bus that the devices are located on;
     # All swerve devices must share the same CAN bus
@@ -138,45 +143,45 @@ class SwerveDriveConstants:
     _front_left_drive_motor_id = 10
     _front_left_steer_motor_id = 20
     _front_left_encoder_id = 0
-    _front_left_encoder_offset: units.rotation = -0.468017578125
+    _front_left_encoder_offset: units.rotation = -0.462158203125
     _front_left_steer_motor_inverted = True
     _front_left_encoder_inverted = False
 
-    _front_left_x_pos: units.meter = inchesToMeters(10.25)
-    _front_left_y_pos: units.meter = inchesToMeters(10.25)
+    _front_left_x_pos: units.meter = inchesToMeters(9.825)
+    _front_left_y_pos: units.meter = inchesToMeters(9.825)
 
     # Front Right
     _front_right_drive_motor_id = 11
     _front_right_steer_motor_id = 21
     _front_right_encoder_id = 1
-    _front_right_encoder_offset: units.rotation = -0.00146484375
+    _front_right_encoder_offset: units.rotation = -0.00048828125
     _front_right_steer_motor_inverted = True
     _front_right_encoder_inverted = False
 
-    _front_right_x_pos: units.meter = inchesToMeters(10.25)
-    _front_right_y_pos: units.meter = inchesToMeters(-10.25)
+    _front_right_x_pos: units.meter = inchesToMeters(9.825)
+    _front_right_y_pos: units.meter = inchesToMeters(-9.825)
 
     # Back Left
     _back_left_drive_motor_id = 12
     _back_left_steer_motor_id = 22
     _back_left_encoder_id = 2
-    _back_left_encoder_offset: units.rotation = -0.089111328125
+    _back_left_encoder_offset: units.rotation = -0.07421875
     _back_left_steer_motor_inverted = True
     _back_left_encoder_inverted = False
 
-    _back_left_x_pos: units.meter = inchesToMeters(-10.25)
-    _back_left_y_pos: units.meter = inchesToMeters(10.25)
+    _back_left_x_pos: units.meter = inchesToMeters(-9.825)
+    _back_left_y_pos: units.meter = inchesToMeters(9.825)
 
     # Back Right
     _back_right_drive_motor_id = 13
     _back_right_steer_motor_id = 23
     _back_right_encoder_id = 3
-    _back_right_encoder_offset: units.rotation = 0.33642578125
+    _back_right_encoder_offset: units.rotation = 0.34375
     _back_right_steer_motor_inverted = True
     _back_right_encoder_inverted = False
 
-    _back_right_x_pos: units.meter = inchesToMeters(-10.25)
-    _back_right_y_pos: units.meter = inchesToMeters(-10.25)
+    _back_right_x_pos: units.meter = inchesToMeters(-9.825)
+    _back_right_y_pos: units.meter = inchesToMeters(-9.825)
 
     front_left = _constants_creator.create_module_constants(
         _front_left_steer_motor_id,
