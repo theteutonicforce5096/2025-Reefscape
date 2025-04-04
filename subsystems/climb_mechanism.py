@@ -14,7 +14,7 @@ from wpimath.trajectory import TrapezoidProfile
 class climb_mechanism:
     GEARRATIO = 155.6
     CURRENT_LIMIT_WEAK = 4  # Amps
-    CURRENT_LIMIT_STRONG = 40  # Amps
+    CURRENT_LIMIT_STRONG = 4  # Amps
     RATCHET_MOVE_TIME = 1.25  # seconds
     RATCHET_TIMER_AMOUNT = 1  # seconds
     MAX_ACCEL_CLIMB = 0.14  # encoder units per second^2

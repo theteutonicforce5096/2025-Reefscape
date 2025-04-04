@@ -67,7 +67,8 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         # Create Limelight instance and configure default values
         self.limelight = Limelight()
         self.limelight.set_limelight_network_table_entry_double("pipeline", 0)
-        self.limelight.set_limelight_network_table_entry_double("imumode_set", 0)
+        self.limelight.set_limelight_network_table_entry_double("imumode_set", 4)
+        self.limelight.set_limelight_network_table_entry_double("imuassistalpha_set", 10**9) # Default: 0.001
         self.limelight.set_limelight_network_table_entry_double("ledMode", 3)
         
         # Create max speeds variables
@@ -86,7 +87,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
 
         # Create Field2d Widget and add it to Shuffleboard
         self.field2d = Field2d()
-        Shuffleboard.getTab("Pose Estimation").add(f"Estimated Pose", self.field2d).withSize(4, 2)
+        Shuffleboard.getTab("Autonomous").add(f"Estimated Pose", self.field2d).withSize(4, 2)
 
         # Create request for controlling swerve drive
         # https://www.chiefdelphi.com/t/motion-magic-velocity-control-for-drive-motors-in-phoenix6-swerve-drive-api/483669/6
@@ -222,6 +223,18 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
 
         # Send widget to Shuffleboard 
         Shuffleboard.getTab("SysId").add(f"Routines", self.sys_id_routines).withSize(2, 1)
+
+        # Create widget for selecting Auto position and set default value
+        self.auto_routines = SendableChooser()
+        self.auto_routines.setDefaultOption("Blue 1", "Blue_1")
+        self.auto_routines.addOption("Blue 2", "Blue_2")
+        self.auto_routines.addOption("Blue 3", "Blue_3")
+        self.auto_routines.addOption("Red 1", "Red_1")
+        self.auto_routines.addOption("Red 2", "Red_2")
+        self.auto_routines.addOption("Red 3", "Red_3")
+
+        # Send widget to Shuffleboard 
+        Shuffleboard.getTab("Autonomous").add(f"Auto Position", self.auto_routines).withSize(2, 1)
 
     def _vision_thread_target(self):
         """
@@ -383,7 +396,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
                 )
             )
         
-        return self.run(lambda: self.set_control(operator_drive_request))
+        return self.runOnce(lambda: self.set_control(operator_drive_request))
     
     def _get_closest_reef_tag_pose(self, pose: Pose2d):
         """
@@ -482,29 +495,18 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         Get the initial pose that the robot should be at on the field when a match starts.
         """
 
-        # Pull pose from pathplanner if auto paths set up
-        # Pulling pose based on driverstation for now
-        alliance = DriverStation.getAlliance()
-        driver_station_number =  DriverStation.getLocation()
-        
-        if alliance == DriverStation.Alliance.kBlue:
-            alliance = "Blue"
-        else:
-            alliance = "Red"
-            
-        if driver_station_number == 0 or driver_station_number == None:
-            driver_station_number = 2
+        starting_position = self.auto_routines.getSelected()
 
         starting_poses = {
-            "Blue_1": Pose2d(7.175, 6.162, Rotation2d.fromDegrees(180.000)),
-            "Blue_2": Pose2d(7.175, 4.054, Rotation2d.fromDegrees(180.000)),
-            "Blue_3": Pose2d(7.175, 1.889, Rotation2d.fromDegrees(180.000)),
-            "Red_1": Pose2d(10.375, 1.894, Rotation2d.fromDegrees(0.000)),
-            "Red_2": Pose2d(10.375, 4.047, Rotation2d.fromDegrees(0.000)),
-            "Red_3": Pose2d(10.375, 6.162, Rotation2d.fromDegrees(0.000)),
+            "Blue_1": Pose2d(7.175, 6.162, Rotation2d.fromDegrees(0.000)),
+            "Blue_2": Pose2d(7.175, 4.054, Rotation2d.fromDegrees(0.000)),
+            "Blue_3": Pose2d(7.175, 1.889, Rotation2d.fromDegrees(0.000)),
+            "Red_1": Pose2d(10.375, 1.894, Rotation2d.fromDegrees(180.000)),
+            "Red_2": Pose2d(10.375, 4.047, Rotation2d.fromDegrees(180.000)),
+            "Red_3": Pose2d(10.375, 6.162, Rotation2d.fromDegrees(180.000)),
         }
 
-        return starting_poses[f"{alliance}_{driver_station_number}"]
+        return starting_poses[starting_position]
 
     def set_sys_id_routine(self):
         """
