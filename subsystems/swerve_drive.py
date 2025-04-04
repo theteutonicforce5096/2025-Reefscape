@@ -67,8 +67,8 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         # Create Limelight instance and configure default values
         self.limelight = Limelight()
         self.limelight.set_limelight_network_table_entry_double("pipeline", 0)
-        self.limelight.set_limelight_network_table_entry_double("imumode_set", 4)
-        self.limelight.set_limelight_network_table_entry_double("imuassistalpha_set", 0.01) # Default: 0.001
+        self.limelight.set_limelight_network_table_entry_double("imumode_set", 0)
+        #self.limelight.set_limelight_network_table_entry_double("imuassistalpha_set", 0.01) # Default: 0.001
         self.limelight.set_limelight_network_table_entry_double("ledMode", 3)
         
         # Create max speeds variables
@@ -384,7 +384,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
                 )
             )
         
-        return self.run(lambda: self.set_control(operator_drive_request))
+        return self.runOnce(lambda: self.set_control(operator_drive_request))
     
     def _get_closest_reef_tag_pose(self, pose: Pose2d):
         """

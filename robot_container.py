@@ -43,46 +43,46 @@ class RobotContainer:
             )
         )
         
-        # Set button binding for reseting field centric heading
-        (self.controller.leftBumper() & self.controller.rightBumper() & self.controller.a()).onTrue(
-            self.drivetrain.runOnce(lambda: self.drivetrain.seed_field_centric())
-        )
+        # # Set button binding for reseting field centric heading
+        # (self.controller.leftBumper() & self.controller.rightBumper() & self.controller.a()).onTrue(
+        #     self.drivetrain.runOnce(lambda: self.drivetrain.seed_field_centric())
+        # )
         
-        # Set button binding for aligning to left side of reef face
-        self.controller.x().onTrue(
-            commands2.DeferredCommand(
-                lambda: self.drivetrain.get_reef_alignment_command(
-                    PathConstraints(
-                        self.max_linear_speed * 0.10, 
-                        self.max_linear_speed * 1, 
-                        self.max_angular_rate * 0.10, 
-                        self.max_angular_rate * 1
-                    ),
-                    0.0,
-                    self.controller,
-                    False
-                ),
-                self.drivetrain
-            )
-        )
+        # # Set button binding for aligning to left side of reef face
+        # self.controller.x().onTrue(
+        #     commands2.DeferredCommand(
+        #         lambda: self.drivetrain.get_reef_alignment_command(
+        #             PathConstraints(
+        #                 self.max_linear_speed * 0.10, 
+        #                 self.max_linear_speed * 1, 
+        #                 self.max_angular_rate * 0.10, 
+        #                 self.max_angular_rate * 1
+        #             ),
+        #             0.0,
+        #             self.controller,
+        #             False
+        #         ),
+        #         self.drivetrain
+        #     )
+        # )
 
-        # Set button binding for aligning to right side of reef face
-        self.controller.b().onTrue(
-            commands2.DeferredCommand(
-                lambda: self.drivetrain.get_reef_alignment_command(
-                    PathConstraints(
-                        self.max_linear_speed * 0.20, 
-                        self.max_linear_speed * 0.60, 
-                        self.max_angular_rate * 0.20, 
-                        self.max_angular_rate * 0.60
-                    ),
-                    0.0,
-                    self.controller,
-                    True
-                ),
-                self.drivetrain
-            )
-        )
+        # # Set button binding for aligning to right side of reef face
+        # self.controller.b().onTrue(
+        #     commands2.DeferredCommand(
+        #         lambda: self.drivetrain.get_reef_alignment_command(
+        #             PathConstraints(
+        #                 self.max_linear_speed * 0.20, 
+        #                 self.max_linear_speed * 0.60, 
+        #                 self.max_angular_rate * 0.20, 
+        #                 self.max_angular_rate * 0.60
+        #             ),
+        #             0.0,
+        #             self.controller,
+        #             True
+        #         ),
+        #         self.drivetrain
+        #     )
+        # )
     
     def configure_button_bindings_test(self):
         # Set the SysId routine to run
