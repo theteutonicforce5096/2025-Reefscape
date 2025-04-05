@@ -247,8 +247,8 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
             # Call add vision measurement function
             self._add_vision_measurement()
 
-            # Schedule the next call for 20ms later and calculate sleep time
-            next_call += 0.02
+            # Schedule the next call for 40ms later and calculate sleep time
+            next_call += 0.04
             sleep_time = next_call - time.perf_counter()
 
             # Sleep if there is time until next call
@@ -361,7 +361,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         :param rotation_speed: Desired rotation speed of the operator in terms of percent of max angular speed where clockwise is positive. 
         :type rotation_speed: float
         """
-
+    
         if left_trigger_pressed and right_trigger_pressed:
             operator_drive_request = (
                 self.slow_mode_field_centric_request.with_velocity_x(

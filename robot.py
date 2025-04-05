@@ -19,8 +19,8 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         CLIMB_MOTOR_L_ID = 61
         CLIMB_MOTOR_R_ID = 62
 
-        self.pxn_fightstick = wpilib.Joystick(2)
-        self.goodStick = wpilib.XboxController(1)
+        # self.pxn_fightstick = wpilib.Joystick(2)
+        # self.goodStick = wpilib.XboxController(1)
 
         # Initializing girly pop climbgal left
         self.ABSOLUTE_MAX_POSITION_L = 0.350204616785049
@@ -74,7 +74,9 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         # self.Climbgal_R.reset()
 
     def teleopPeriodic(self):
-        self.container.elevator.run_pid()
+        pass
+        # self.container.elevator.run_pid()
+        # self.container.wrist.run_pid()
         # self.Climbgal_L.periodic()
         # self.Climbgal_R.periodic()
 
@@ -92,39 +94,40 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         commands2.CommandScheduler.getInstance().cancelAll()
         self.container.configure_button_bindings_test()
         
-        self.Climbgal_L.stop()
-        self.Climbgal_R.stop()
-        self.Climbgal_R.testInit()
-        self.Climbgal_L.testInit()
+        # self.Climbgal_L.stop()
+        # self.Climbgal_R.stop()
+        # self.Climbgal_R.testInit()
+        # self.Climbgal_L.testInit()
 
     def testPeriodic(self):    
-        self.Climbgal_L.testPeriodic()
-        self.Climbgal_R.testPeriodic()
+        pass
+        # self.Climbgal_L.testPeriodic()
+        # self.Climbgal_R.testPeriodic()
 
-        # Left Thumbstick
-        joystickAxis_L = -self.goodStick.getLeftY()
-        self.Climbgal_L.motorDirect(joystickAxis_L)
-        # Right Thumbstick
-        joystickAxis_R = -self.goodStick.getRightY()
-        self.Climbgal_R.motorDirect(joystickAxis_R)
+        # # Left Thumbstick
+        # joystickAxis_L = -self.goodStick.getLeftY()
+        # self.Climbgal_L.motorDirect(joystickAxis_L)
+        # # Right Thumbstick
+        # joystickAxis_R = -self.goodStick.getRightY()
+        # self.Climbgal_R.motorDirect(joystickAxis_R)
 
-        # Making the encoder values corresponding to the drivers station or smth
-        self.sd_table.putNumber("climber_R_motor_cmd", joystickAxis_R)
-        self.sd_table.putNumber("climber_L_motor_cmd", joystickAxis_L)
+        # # Making the encoder values corresponding to the drivers station or smth
+        # self.sd_table.putNumber("climber_R_motor_cmd", joystickAxis_R)
+        # self.sd_table.putNumber("climber_L_motor_cmd", joystickAxis_L)
 
-        ### DISENGAGING AND ENGAGING RATCHET??? ###
-        ratchet_engage_L = self.sd_table.getBoolean("ratchet_engage_L", False)
-        ratchet_engage_R = self.sd_table.getBoolean("ratchet_engage_R", False)
-        # Getting T/F from Network table
-        if ratchet_engage_L == True:
-            self.Climbgal_L.__engageRatchet__()
-        else:
-            self.Climbgal_L.__disengageRatchet__()
+        # ### DISENGAGING AND ENGAGING RATCHET??? ###
+        # ratchet_engage_L = self.sd_table.getBoolean("ratchet_engage_L", False)
+        # ratchet_engage_R = self.sd_table.getBoolean("ratchet_engage_R", False)
+        # # Getting T/F from Network table
+        # if ratchet_engage_L == True:
+        #     self.Climbgal_L.__engageRatchet__()
+        # else:
+        #     self.Climbgal_L.__disengageRatchet__()
 
-        if ratchet_engage_R == True:
-            self.Climbgal_R.__engageRatchet__()
-        else:
-            self.Climbgal_R.__disengageRatchet__()
+        # if ratchet_engage_R == True:
+        #     self.Climbgal_R.__engageRatchet__()
+        # else:
+        #     self.Climbgal_R.__disengageRatchet__()
 
     def testExit(self):
         commands2.CommandScheduler.getInstance().cancelAll()

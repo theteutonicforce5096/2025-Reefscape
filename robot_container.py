@@ -4,6 +4,8 @@ from commands2.cmd import print_
 
 from subsystems.swerve_drive_constants import SwerveDriveConstants
 from subsystems.elevator import Elevator
+from subsystems.wrist import Wrist
+from subsystems.intake import Intake
 
 from pathplannerlib.auto import AutoBuilder, PathConstraints
 
@@ -17,10 +19,13 @@ class RobotContainer:
         # Initialize hardware
         self.drivetrain = SwerveDriveConstants.create_drivetrain()
 
-        self.elevator = Elevator(40)
+        # self.elevator = Elevator(40)
+        # self.wrist = Wrist(50)
+        # self.intake = Intake(51)
 
         # Initialize controller
         self.controller = commands2.button.CommandXboxController(0)
+        self.controller_2 = commands2.button.CommandXboxController(1)
         
         # Create max speed variables
         self.max_linear_speed = SwerveDriveConstants.max_linear_speed
@@ -48,8 +53,9 @@ class RobotContainer:
         # Reset slew rate limiters for controlling acceleration
         self.drivetrain.reset_slew_rate_limiters()
 
-        # Reset elevator setpoint
-        self.elevator.reset_setpoint()
+        # # Reset elevator setpoint
+        # self.elevator.reset_setpoint()
+        # self.wrist.reset_setpoint()
         
         # Set default command for drivetrain
         self.drivetrain.setDefaultCommand(
@@ -65,64 +71,88 @@ class RobotContainer:
             )
         )
         
-        self.controller.povUp().whileTrue(
-            self.elevator.run(lambda: self.elevator.raise_setpoint())
-        )
-
-        self.controller.povDown().whileTrue(
-            self.elevator.run(lambda: self.elevator.lower_setpoint())
-        )
-
-        self.controller.povRight().whileTrue(
-            self.elevator.run(lambda: self.elevator.set_setpoint(20))
-        )
-
-        self.controller.povLeft().onTrue(
-            self.elevator.runOnce(
-                lambda: print_(f"{self.elevator.encoder.getPosition()}, {self.elevator.setpoint}").schedule()
-            )
-        )
-
         # Set button binding for reseting field centric heading
         (self.controller.leftBumper() & self.controller.rightBumper() & self.controller.a()).onTrue(
             self.drivetrain.runOnce(lambda: self.drivetrain.seed_field_centric())
         )
         
-        # Set button binding for aligning to left side of reef face
-        self.controller.x().onTrue(
-            commands2.DeferredCommand(
-                lambda: self.drivetrain.get_reef_alignment_command(
-                    PathConstraints(
-                        self.max_linear_speed * 0.10, 
-                        self.max_linear_speed * 1, 
-                        self.max_angular_rate * 0.10, 
-                        self.max_angular_rate * 1
-                    ),
-                    0.0,
-                    self.controller,
-                    False
-                ),
-                self.drivetrain
-            )
-        )
+        # # Set button binding for aligning to left side of reef face
+        # self.controller.x().onTrue(
+        #     commands2.DeferredCommand(
+        #         lambda: self.drivetrain.get_reef_alignment_command(
+        #             PathConstraints(
+        #                 self.max_linear_speed * 0.10, 
+        #                 self.max_linear_speed * 1, 
+        #                 self.max_angular_rate * 0.10, 
+        #                 self.max_angular_rate * 1
+        #             ),
+        #             0.0,
+        #             self.controller,
+        #             False
+        #         ),
+        #         self.drivetrain
+        #     )
+        # )
 
-        # Set button binding for aligning to right side of reef face
-        self.controller.b().onTrue(
-            commands2.DeferredCommand(
-                lambda: self.drivetrain.get_reef_alignment_command(
-                    PathConstraints(
-                        self.max_linear_speed * 0.20, 
-                        self.max_linear_speed * 0.60, 
-                        self.max_angular_rate * 0.20, 
-                        self.max_angular_rate * 0.60
-                    ),
-                    0.0,
-                    self.controller,
-                    True
-                ),
-                self.drivetrain
-            )
-        )
+        # # Set button binding for aligning to right side of reef face
+        # self.controller.b().onTrue(
+        #     commands2.DeferredCommand(
+        #         lambda: self.drivetrain.get_reef_alignment_command(
+        #             PathConstraints(
+        #                 self.max_linear_speed * 0.20, 
+        #                 self.max_linear_speed * 0.60, 
+        #                 self.max_angular_rate * 0.20, 
+        #                 self.max_angular_rate * 0.60
+        #             ),
+        #             0.0,
+        #             self.controller,
+        #             True
+        #         ),
+        #         self.drivetrain
+        #     )
+        # )
+        
+        # self.controller_2.povUp().whileTrue(
+        #     self.elevator.run(lambda: self.elevator.raise_setpoint())
+        # )
+
+        # self.controller_2.povDown().whileTrue(
+        #     self.elevator.run(lambda: self.elevator.lower_setpoint())
+        # )
+
+        # self.controller_2.povRight().onTrue(
+        #     self.elevator.runOnce(lambda: self.elevator.set_setpoint(100))
+        # )
+
+        # self.controller_2.povLeft().onTrue(
+        #     self.elevator.runOnce(lambda: self.elevator.set_setpoint(0))
+        # )
+
+        # # self.controller_2.povLeft().onTrue(
+        # #     self.elevator.runOnce(
+        # #         lambda: print_(f"{self.elevator.encoder.getPosition()}, {self.elevator.setpoint}").schedule()
+        # #     )
+        # # )
+
+        # self.controller_2.y().whileTrue(
+        #     self.wrist.run(lambda: self.wrist.raise_setpoint())
+        # )
+
+        # self.controller_2.a().whileTrue(
+        #     self.wrist.run(lambda: self.wrist.lower_setpoint())
+        # )
+
+        # self.intake.setDefaultCommand(
+        #     self.intake.runOnce(lambda: self.intake.stop())
+        # )
+
+        # self.controller_2.b().onTrue(
+        #     self.intake.runOnce(lambda: self.intake.intake())
+        # )
+
+        # self.controller_2.x().onTrue(
+        #     self.intake.runOnce(lambda: self.intake.release())
+        # )
     
     def configure_button_bindings_test(self):
         # Set the SysId routine to run
