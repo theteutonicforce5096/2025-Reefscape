@@ -21,6 +21,7 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
 
         # self.pxn_fightstick = wpilib.Joystick(2)
         # self.goodStick = wpilib.XboxController(1)
+        #TODO: Check joystick situation. Here we have two joysticks defined; in robot_container.py we have joystick also defined on port 0. We never actually use 3 joysticks, so...?
 
         # Initializing girly pop climbgal left
         self.ABSOLUTE_MAX_POSITION_L = 0.350204616785049

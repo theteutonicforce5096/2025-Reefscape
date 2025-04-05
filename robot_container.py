@@ -70,6 +70,16 @@ class RobotContainer:
                 self.drivetrain
             )
         )
+        #TODO: The use of DeferredCommand above looks fishy.
+        # Reading the description of DeferredCommand, it looks like it's intended for use by
+        # "lower priority" activities to execute as time allows. I would not consider drivetrain
+        # processing to be a low priority task - quite the opposite, actually.
+        # But more concerningly, is the part that says the isFinished() method of a DefaultCommand
+        # should never return true. I don't think a DeferredCommand meets that requirement.
+        # If indeed a DeferredCommand.isFinished() returns true at some point, then the next time
+        # the robot needs to run a deferred command, it may have to create a new instance of
+        # the DeferredCommand object. If this is occuring every 20ms, then it would have a significant
+        # impact on performance.
         
         # Set button binding for reseting field centric heading
         (self.controller.leftBumper() & self.controller.rightBumper() & self.controller.a()).onTrue(
