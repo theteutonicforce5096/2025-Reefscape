@@ -14,13 +14,13 @@ from wpimath.trajectory import TrapezoidProfile
 class climb_mechanism:
     GEARRATIO = 155.6
     CURRENT_LIMIT_WEAK = 4  # Amps
-    CURRENT_LIMIT_STRONG = 4  # Amps
+    CURRENT_LIMIT_STRONG = 40  # Amps
     RATCHET_MOVE_TIME = 1.25  # seconds
     RATCHET_TIMER_AMOUNT = 1  # seconds
-    MAX_ACCEL_CLIMB = 0.14  # encoder units per second^2
-    MAX_ACCEL_RESET = 0.3
-    MAX_SPEED_CLIMB = 0.125
-    MAX_SPEED_RESET = 0.25
+    MAX_SPEED_CLIMB = 0.20
+    MAX_ACCEL_CLIMB = 0.20  # encoder units per second^2
+    MAX_ACCEL_RESET = 0.20
+    MAX_SPEED_RESET = 0.20
     # ^^^^^ Used for Motor encoder- not absolute
 
     def __init__(
@@ -127,10 +127,6 @@ class climb_mechanism:
 
         self.home_finding_mode = False
 
-       
-
-        
-
     def getMotorEncoderPosition(self) -> float:
         return self.motor_encoder.getPosition()
 
@@ -192,10 +188,10 @@ class climb_mechanism:
         )
 
     def periodic(self):
-        self.sd_table.putNumber(
-            self.nt_abs_enc_value, self.getAbsoluteEncoderPosition()
-        )
-        self.sd_table.putNumber(self.nt_rel_enc_value, self.getMotorEncoderPosition())
+        # self.sd_table.putNumber(
+        #     self.nt_abs_enc_value, self.getAbsoluteEncoderPosition()
+        # )
+        # self.sd_table.putNumber(self.nt_rel_enc_value, self.getMotorEncoderPosition())
 
         # CLIMBING #
         current_location = self.getAbsoluteEncoderPosition()
@@ -211,10 +207,9 @@ class climb_mechanism:
         ):
             self.ClimberMotor.set(0.0)
         self.ClimberMotor.set(Motor_cmd)
-        self.sd_table.putNumber(self.nt_motor_cmd_value, Motor_cmd)
+        # self.sd_table.putNumber(self.nt_motor_cmd_value, Motor_cmd)
 
         #     # RESET #
-
         if self.ratchet_timer.isRunning():
             if self.ratchet_timer.hasElapsed(self.RATCHET_TIMER_AMOUNT):
                 self.ratchet_timer.stop()

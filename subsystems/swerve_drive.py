@@ -1,5 +1,6 @@
 import threading
 import time
+from typing import Callable
 
 from commands2 import Subsystem
 from commands2.sysid import SysIdRoutine
@@ -112,9 +113,9 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         )
 
         # Create slew rate limiters for limiting robot acceleration
-        self.straight_speed_limiter = SlewRateLimiter(self.max_linear_speed * 4, -self.max_linear_speed * 8)
-        self.strafe_speed_limiter = SlewRateLimiter(self.max_linear_speed * 4, -self.max_linear_speed * 8)
-        self.rotation_speed_limiter = SlewRateLimiter(self.max_angular_rate * 4, -self.max_angular_rate * 8)
+        self.straight_speed_limiter = SlewRateLimiter(self.max_linear_speed * 2, -self.max_linear_speed * 6)
+        self.strafe_speed_limiter = SlewRateLimiter(self.max_linear_speed * 2, -self.max_linear_speed * 6)
+        self.rotation_speed_limiter = SlewRateLimiter(self.max_angular_rate * 2, -self.max_angular_rate * 6)
 
         # Create Apply Robot Speeds Request for PathPlanner
         self.apply_robot_speeds_request = (
@@ -236,6 +237,14 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         # Send widget to Shuffleboard 
         Shuffleboard.getTab("Autonomous").add(f"Auto Position", self.auto_routines).withSize(2, 1)
 
+    def periodic(self):
+        """
+        Update pose of the robot in network tables periodically.
+        """
+
+        # Update pose of robot in Field 2d Widget
+        self.field2d.setRobotPose(self.get_state().pose)
+
     def _vision_thread_target(self):
         """
         Add vision measurement to swerve drive every 20ms in vision thread.
@@ -247,8 +256,8 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
             # Call add vision measurement function
             self._add_vision_measurement()
 
-            # Schedule the next call for 40ms later and calculate sleep time
-            next_call += 0.04
+            # Schedule the next call for 20ms later and calculate sleep time
+            next_call += 0.02
             sleep_time = next_call - time.perf_counter()
 
             # Sleep if there is time until next call
@@ -344,11 +353,11 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         self.straight_speed_limiter.reset(current_state.speeds.vx)
         self.strafe_speed_limiter.reset(current_state.speeds.vy)
         self.rotation_speed_limiter.reset(current_state.speeds.omega)
-    
-    def get_operator_drive_command(self, left_trigger_pressed: bool, right_trigger_pressed: bool,
+
+    def _get_operator_drive_request(self, left_trigger_pressed: bool, right_trigger_pressed: bool,
                                    forward_speed: float, strafe_speed: float, rotation_speed: float):
         """
-        Get the desired drive command of the operator.
+        Get the desired drive request of the operator.
 
         :param left_trigger_pressed: Whether the left trigger of the operator's controller is pressed or not.
         :type left_trigger_pressed: bool
@@ -361,7 +370,7 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
         :param rotation_speed: Desired rotation speed of the operator in terms of percent of max angular speed where clockwise is positive. 
         :type rotation_speed: float
         """
-    
+        
         if left_trigger_pressed and right_trigger_pressed:
             operator_drive_request = (
                 self.slow_mode_field_centric_request.with_velocity_x(
@@ -394,8 +403,43 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
                     )
                 )
             )
-        
-        return self.runOnce(lambda: self.set_control(operator_drive_request))
+
+        return operator_drive_request
+    
+    def get_operator_drive_command(self, left_trigger: Callable[[], bool], right_trigger: Callable[[], bool],
+                                   forward_speed: Callable[[], bool], strafe_speed: Callable[[], bool], 
+                                   rotation_speed: Callable[[], bool]):
+        """
+        Get the drive command for driving the robot.
+
+        :param left_trigger: Function that returns whether the left trigger of the operator's controller 
+        is pressed or not.
+        :type left_trigger: Callable[[], bool]
+        :param right_trigger: Function that returns whether the right trigger of the operator's controller 
+        is pressed or not.
+        :type right_trigger: Callable[[], bool]
+        :param forward_speed: Function that returns the desired forward speed of the operator 
+        in terms of percent of max linear speed where forward is positive. 
+        :type forward_speed: Callable[[], float]
+        :param strafe_speed: Function that returns the desired strafe speed of the operator 
+        in terms of percent of max linear speed where right is positive. 
+        :type strafe_speed: Callable[[], float]
+        :param rotation_speed: Function that returns the desired rotation speed of the operator 
+        in terms of percent of max angular speed where clockwise is positive. 
+        :type rotation_speed: Callable[[], float]
+        """
+
+        return self.run(
+            lambda: self.set_control(
+                self._get_operator_drive_request(
+                    left_trigger(),
+                    right_trigger(),
+                    forward_speed(),
+                    strafe_speed(),
+                    rotation_speed()
+                )
+            )
+        )
     
     def _get_closest_reef_tag_pose(self, pose: Pose2d):
         """

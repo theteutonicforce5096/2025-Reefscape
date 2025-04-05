@@ -8,11 +8,12 @@ from subsystems.wrist import Wrist
 from subsystems.intake import Intake
 
 from pathplannerlib.auto import AutoBuilder, PathConstraints
+from pathplannerlib.path import PathPlannerPath, GoalEndState
 
 from phoenix6 import SignalLogger
 
 from wpilib import DriverStation
-from wpimath.geometry import Transform2d, Pose2d
+from wpimath.geometry import Transform2d, Pose2d, Rotation2d
 
 class RobotContainer:
     def __init__(self):
@@ -25,7 +26,7 @@ class RobotContainer:
 
         # Initialize controller
         self.controller = commands2.button.CommandXboxController(0)
-        self.controller_2 = commands2.button.CommandXboxController(1)
+        # self.controller_2 = commands2.button.CommandXboxController(1)
         
         # Create max speed variables
         self.max_linear_speed = SwerveDriveConstants.max_linear_speed
@@ -33,17 +34,18 @@ class RobotContainer:
     
     def configure_button_bindings_auto(self):
         # Reset the pose of the robot
-        self.drivetrain.reset_pose(self.drivetrain.get_starting_position())  
+        starting_pose = self.drivetrain.get_starting_position()
+        self.drivetrain.reset_pose(starting_pose)  
 
         if DriverStation.getAlliance() == DriverStation.Alliance.kBlue:
-            target_pose = self.drivetrain.get_state().pose.transformBy(Transform2d(Pose2d(), Pose2d(-0.25, 0, 0)))
+            target_pose = self.drivetrain.get_state().pose.transformBy(Transform2d(Pose2d(), Pose2d(-0.5, 0, 0)))
         else: 
-            target_pose = self.drivetrain.get_state().pose.transformBy(Transform2d(Pose2d(), Pose2d(0.25, 0, 0)))
+            target_pose = self.drivetrain.get_state().pose.transformBy(Transform2d(Pose2d(), Pose2d(-0.5, 0, 0)))
 
         AutoBuilder.pathfindToPose(
             target_pose,
-            PathConstraints(0.5, 1.0, 1.5, 3),
-            0.0,
+            PathConstraints(0.5, 1.0, 0.0, 0.0),
+            0.0
         ).schedule()
 
     def configure_button_bindings_teleop(self):   
@@ -59,27 +61,14 @@ class RobotContainer:
         
         # Set default command for drivetrain
         self.drivetrain.setDefaultCommand(
-            commands2.DeferredCommand(
-                lambda: self.drivetrain.get_operator_drive_command(
-                    self.controller.getLeftTriggerAxis() > 0.1,
-                    self.controller.getRightTriggerAxis() > 0.1,
-                    self.controller.getLeftY(),
-                    self.controller.getLeftX(),
-                    self.controller.getRightX()
-                ),
-                self.drivetrain
-            )
+            self.drivetrain.get_operator_drive_command(
+                lambda: self.controller.getLeftTriggerAxis() > 0.1,
+                lambda: self.controller.getRightTriggerAxis() > 0.1,
+                lambda: self.controller.getLeftY(),
+                lambda: self.controller.getLeftX(),
+                lambda: self.controller.getRightX()
+            ) 
         )
-        #TODO: The use of DeferredCommand above looks fishy.
-        # Reading the description of DeferredCommand, it looks like it's intended for use by
-        # "lower priority" activities to execute as time allows. I would not consider drivetrain
-        # processing to be a low priority task - quite the opposite, actually.
-        # But more concerningly, is the part that says the isFinished() method of a DefaultCommand
-        # should never return true. I don't think a DeferredCommand meets that requirement.
-        # If indeed a DeferredCommand.isFinished() returns true at some point, then the next time
-        # the robot needs to run a deferred command, it may have to create a new instance of
-        # the DeferredCommand object. If this is occuring every 20ms, then it would have a significant
-        # impact on performance.
         
         # Set button binding for reseting field centric heading
         (self.controller.leftBumper() & self.controller.rightBumper() & self.controller.a()).onTrue(
