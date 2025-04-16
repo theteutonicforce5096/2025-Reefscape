@@ -24,8 +24,8 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         #TODO: Check joystick situation. Here we have two joysticks defined; in robot_container.py we have joystick also defined on port 0. We never actually use 3 joysticks, so...?
 
         # Initializing girly pop climbgal left
-        self.ABSOLUTE_MAX_POSITION_L = 0.840030133724213
-        self.ABSOLUTE_MIN_POSITION_L = 0.203899174928665
+        self.ABSOLUTE_MAX_POSITION_L = 0.861389338970184
+        self.ABSOLUTE_MIN_POSITION_L = 0.185304895043373
         # Range of 0.612
         self.Climbgal_L = climb_mechanism.climb_mechanism(
             RATCHET_SERVO_L_ID,
@@ -36,8 +36,8 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         )
 
         # Initializing girly pop climbgal right
-        self.ABSOLUTE_MAX_POSITION_R = 0.787278056144714 # max - 0.10
-        self.ABSOLUTE_MIN_POSITION_R = 0.159969508647919 # min + 0.10
+        self.ABSOLUTE_MAX_POSITION_R = 0.800958693027496 # max - 0.10
+        self.ABSOLUTE_MIN_POSITION_R = 0.212636172771454 # min + 0.10
         # Range of 0.606
         self.Climbgal_R = climb_mechanism.climb_mechanism(
             RATCHET_SERVO_R_ID,
@@ -80,6 +80,13 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         self.Climbgal_L.periodic()
         self.Climbgal_R.periodic()
 
+
+        if self.pxn_fightstick.getRawButtonPressed(7):
+            self.Climbgal_L.findHomePosition()
+        if self.pxn_fightstick.getRawButtonPressed(8):
+            self.Climbgal_R.findHomePosition
+            # self.Climbgal_L.__engageRatchet__()
+            # self.Climbgal_R.__engageRatchet__()
         if self.pxn_fightstick.getRawButtonPressed(9):
             self.Climbgal_L.climb()
             self.Climbgal_R.climb()

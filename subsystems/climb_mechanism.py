@@ -12,7 +12,7 @@ from wpimath.trajectory import TrapezoidProfile
 
 
 class climb_mechanism:
-    GEARRATIO = 155.6
+    GEARRATIO = 155.6 # TODO: Figure out the new gear ratio for the relative encoder
     CURRENT_LIMIT_WEAK = 4  # Amps
     CURRENT_LIMIT_STRONG = 40  # Amps
     RATCHET_MOVE_TIME = 1.25  # seconds
@@ -35,11 +35,7 @@ class climb_mechanism:
         self.nt_abs_enc_value = dashboard_prefix + "_abs_enc"
         self.nt_motor_cmd_value = dashboard_prefix + "_motor_cmd"
 
-        # Initializing Everything!!!
-
-
-        # Initializing abs encoder and motor encoder
-       
+        # Initializing Everything!!
         
 
         # Build a motor config structure
@@ -66,9 +62,7 @@ class climb_mechanism:
         )
 
         self.motor_encoder = self.ClimberMotor.getEncoder()
-        self.absolute_encoder = self.ClimberMotor.getAbsoluteEncoder()
-
-        # Initializing TARGET POSITIONS
+        # self.absolute_encoder = self.ClimberMotor.getAbsoluteEncoder()
        
 #  read absolute encoder
 #         compare the value to the arm position limit- it better be higher because if it isnt we need to add one
@@ -78,19 +72,23 @@ class climb_mechanism:
         # Because of aliasing, we need to make sure that the climber limits are
         # above and less than respectively our current position, IF NOT, adjust
      
-        cur_position = self.absolute_encoder.getPosition()
+        # cur_position = self.absolute_encoder.getPosition()
       
-        self.TARGET_POSITION_LIFT = ABSOLUTE_MIN_POSITION
-        self.TARGET_POSITION_LIFT += 0.03
-        self.TARGET_POSITION_ARMED = ABSOLUTE_MAX_POSITION
-        self.TARGET_POSITION_ARMED -= 0.03
+        # self.TARGET_POSITION_LIFT = ABSOLUTE_MIN_POSITION
+        # self.TARGET_POSITION_LIFT += 0.2
+        # self.TARGET_POSITION_ARMED = ABSOLUTE_MAX_POSITION
+        # self.TARGET_POSITION_ARMED -= 0.03
         # ^^^^ This code is here to prevent the encoder from trying to go all the way around when
         # ^^^^ it starts in between the ARMED position and the ABS MAX position
     
-        if cur_position > ABSOLUTE_MAX_POSITION:
-            self.TARGET_POSITION_ARMED += 1
-        if cur_position < ABSOLUTE_MIN_POSITION:
-            self.TARGET_POSITION_LIFT -=1
+
+    ### THIS WASA REALLY COMPLICATED ANSD WE DON'T NEED IT ANYMORE :DD ****
+    #   until we change our minds in the future :( 
+
+        # if cur_position > ABSOLUTE_MAX_POSITION:
+        #     self.TARGET_POSITION_ARMED += 1
+        # if cur_position < ABSOLUTE_MIN_POSITION:
+        #     self.TARGET_POSITION_LIFT -=1
         # print(f"arm_limit {self.TARGET_POSITION_ARMED:0.3f}")
         # print(f"arm_limit (lift) {self.TARGET_POSITION_LIFT: 0.3f}")
         # # ^^^^ The f string allows us to format the print statement how we want
@@ -110,8 +108,8 @@ class climb_mechanism:
 
         # Initalizing Encoder - We are using absolute
       
-        self.last_encoder_val = self.absolute_encoder.getPosition()
-        self.absolute_enc_offset = 0.0
+        # self.last_encoder_val = self.absolute_encoder.getPosition()
+        # self.absolute_enc_offset = 0.0
 
         self.__engageRatchet__()
 
@@ -130,25 +128,20 @@ class climb_mechanism:
     def getMotorEncoderPosition(self) -> float:
         return self.motor_encoder.getPosition()
 
-    def getAbsoluteEncoderPosition(self) -> float:
-        current_encoder_val = self.absolute_encoder.getPosition()
-        if (current_encoder_val - self.last_encoder_val) < -0.5:
-            # we flipped!!!!!!
-            self.absolute_enc_offset += 1.0
+    # def getAbsoluteEncoderPosition(self) -> float:
+    #     current_encoder_val = self.absolute_encoder.getPosition()
+    #     if (current_encoder_val - self.last_encoder_val) < -0.5:
+    #         # we flipped!!!!!!
+    #         self.absolute_enc_offset += 1.0
 
-        elif (current_encoder_val - self.last_encoder_val) > 0.5:
-            # we flipped!!!!!!
-            self.absolute_enc_offset -= 1.0
+    #     elif (current_encoder_val - self.last_encoder_val) > 0.5:
+    #         # we flipped!!!!!!
+    #         self.absolute_enc_offset -= 1.0
 
-        self.last_encoder_val = current_encoder_val
+    #     self.last_encoder_val = current_encoder_val
 
-        return current_encoder_val + self.absolute_enc_offset
+    #     return current_encoder_val + self.absolute_enc_offset
 
-    # def getArmPosition(self):
-    #     # This is all good we jsut need the home position defined
-    #     self.EncoderVal = self.getRawMotorEncoderVal()
-    #     self.ArmPosition = self.EncoderVal / self.GEARRATIO - self.HomePosition
-    #     print(self.ArmPosition)
 
     def stop(self):
         # stops motor
@@ -164,7 +157,7 @@ class climb_mechanism:
 
     def climb(self):
         self.PID.setConstraints(self.constraints_CLIMB)
-        self.PID.setGoal(self.TARGET_POSITION_LIFT)
+        self.PID.setGoal(self.TARGET_POSITION_LIFT) #TODO: figure out this
         # Negative value is the climb direction while positive is the reset.
 
     def reset(self):
@@ -173,13 +166,13 @@ class climb_mechanism:
         self.ratchet_timer.restart()
 
     def teleopInit(self):
-        self.last_encoder_val = self.absolute_encoder.getPosition()
-        self.absolute_enc_offset = 0.0
+        # self.last_encoder_val = self.absolute_encoder.getPosition()
+        # self.absolute_enc_offset = 0.0
 
         # Resetting PID
         self.__disengageRatchet__()
-        self.PID.reset(self.getAbsoluteEncoderPosition())
-        self.PID.setGoal(self.getAbsoluteEncoderPosition())
+        self.PID.reset(self.motor_encoder.getPosition())
+        self.PID.setGoal(self.motor_encoder.getPosition())
         self.motor_config.smartCurrentLimit(self.CURRENT_LIMIT_STRONG)
         self.ClimberMotor.configure(
             self.motor_config,
@@ -187,7 +180,7 @@ class climb_mechanism:
             rev.SparkMax.PersistMode.kNoPersistParameters,
         )
 
-    def periodic(self):
+    def periodic(self): #TODO: put climbing as false if home finding is not done so we don't break the motors :D
         # self.sd_table.putNumber(
         #     self.nt_abs_enc_value, self.getAbsoluteEncoderPosition()
         # )
@@ -224,25 +217,29 @@ class climb_mechanism:
 
     #### HOME POSITION STUFF ####
 
-    # def findHomePosition(self):
-    #     print("setting home")
-    #     self.absolute_encoder
-
+    def findHomePosition(self):
+        print("setting home")
     # Reduce motor torque so we don't break anything!
-    # self.motor_config.smartCurrentLimit(self.CURRENT_LIMIT_WEAK)
-    # self.ClimberMotor.configure(
-    #     self.motor_config,
-    #     rev.SparkMax.ResetMode.kNoResetSafeParameters,
-    #     rev.SparkMax.PersistMode.kNoPersistParameters
-    # )
+        self.motor_config.smartCurrentLimit(self.CURRENT_LIMIT_WEAK)
+        self.ClimberMotor.configure(
+            self.motor_config,
+            rev.SparkMax.ResetMode.kNoResetSafeParameters,
+            rev.SparkMax.PersistMode.kNoPersistParameters
+        )
+    # Get the ratchet out of the way
+        self.__disengageRatchet__()
+        self.ratchet_timer.restart()
 
-    # # Get the ratchet out of the way
-    # self.__disengageRatchet__()
-    # self.ratchet_timer.restart()
+        self.home_timer.stop()
+        self.LastEncoderValue = self.motor_encoder.getPosition()
+        self.home_finding_mode = True
 
-    # self.home_timer.stop()
-    # self.LastEncoderValue = self.motor_encoder.getPosition()
-    # self.home_finding_mode = True
+    # def getArmPosition(self):
+    #         # This is all good we jsut need the home position defined
+    #         self.EncoderVal = self.motor_encoder.getPosition()
+    #         self.ArmPosition = self.EncoderVal / self.GEARRATIO - self.HomePosition
+    #         print(self.ArmPosition)
+
 
     def testInit(self):
         self.last_encoder_val = self.absolute_encoder.getPosition()
@@ -265,33 +262,34 @@ class climb_mechanism:
 
     # finding home position - rest of the code
 
-    # if self.home_finding_mode:
+        if self.home_finding_mode:
 
-    #     current_encoder_value = self.motor_encoder.getPosition()
+            current_encoder_value = self.motor_encoder.getPosition()
 
-    #     # This if statement takes care of waiting until the ratchet gets out of the way
-    #     if self.ratchet_timer.isRunning():
-    #         if self.ratchet_timer.hasElapsed(self.RATCHET_MOVE_TIME):
-    #             self.ratchet_timer.stop()
-    #             print("ratchet timer elapsed")
-    #             self.ClimberMotor.set(0.08)
-    #             self.home_timer.restart()
+            # This if statement takes care of waiting until the ratchet gets out of the way
+            if self.ratchet_timer.isRunning():
+                if self.ratchet_timer.hasElapsed(self.RATCHET_MOVE_TIME):
+                    self.ratchet_timer.stop()
+                    print("ratchet timer elapsed")
+                    self.ClimberMotor.set(0.08)
+                    self.home_timer.restart()
 
-    #     # This if statement looks for the climber to reach the end of its travel
-    #     if self.home_timer.isRunning():
-    #         if self.home_timer.advanceIfElapsed(1.0):
-    #             if abs(current_encoder_value - self.LastEncoderValue) <= 0.001:
-    #                 # Reached the end of travel
-    #                 self.ClimberMotor.set(0.0)
-    #                 self.home_timer.stop()
-    #                 print("Found home")
-    #                 self.motor_encoder.setPosition(0.0)
-    #                 self.home_finding_mode = False
+            # This if statement looks for the climber to reach the end of its travel
+            if self.home_timer.isRunning():
+                if self.home_timer.advanceIfElapsed(1.0):
+                    if abs(current_encoder_value - self.LastEncoderValue) <= 0.001:
+                        # Reached the end of travel
+                        self.ClimberMotor.set(0.0)
+                        self.home_timer.stop()
+                        print("Found home")
+                        self.motor_encoder.setPosition(0.0)
+                        self.home_finding_mode = False
 
-    # #   ^^^ If the motor is still running and the encoder hasn't changed,
-    # #   ^^^ then we must be at the physical stop of the mechanism :DDD
+                 #   ^^^ If the motor is still running and the encoder hasn't changed,
+                 #   ^^^ then we must be at the physical stop of the mechanism :DDD
 
-    # # ^^^ We set the last encoder value to be equal to what it is equal to currently
-    # # ^^^ This is home position
+        
 
-    # self.LastEncoderValue = current_encoder_value
+        self.LastEncoderValue = current_encoder_value
+        # ^^^ We set the last encoder value to be equal to what it is equal to currently
+        # ^^^ This is home position
