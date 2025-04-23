@@ -14,7 +14,7 @@ from wpimath.trajectory import TrapezoidProfile
 class climb_mechanism:
     GEARRATIO = 155.6 # TODO: Figure out the new gear ratio for the relative encoder
     CURRENT_LIMIT_WEAK = 4  # Amps
-    CURRENT_LIMIT_STRONG = 40  # Amps
+    CURRENT_LIMIT_STRONG = 4  # Amps
     RATCHET_MOVE_TIME = 1.25  # seconds
     RATCHET_TIMER_AMOUNT = 1  # seconds
     MAX_SPEED_CLIMB = 0.20
@@ -62,6 +62,10 @@ class climb_mechanism:
         )
 
         self.motor_encoder = self.ClimberMotor.getEncoder()
+
+
+        self.TARGET_POSITION_ARMED = 0.02
+        self.TARGET_POSITION_LIFT = 0.2
         # self.absolute_encoder = self.ClimberMotor.getAbsoluteEncoder()
        
 #  read absolute encoder
@@ -180,88 +184,9 @@ class climb_mechanism:
             rev.SparkMax.PersistMode.kNoPersistParameters,
         )
 
-    def periodic(self): #TODO: put climbing as false if home finding is not done so we don't break the motors :D
-        # self.sd_table.putNumber(
-        #     self.nt_abs_enc_value, self.getAbsoluteEncoderPosition()
-        # )
-        # self.sd_table.putNumber(self.nt_rel_enc_value, self.getMotorEncoderPosition())
+    def AutonomousPeriodic(self): #TODO: 
 
-        # CLIMBING #
-        current_location = self.getAbsoluteEncoderPosition()
-        Motor_cmd = self.PID.calculate(current_location)
-        Motor_cmd = min(Motor_cmd, 0.5)
-        Motor_cmd = max(Motor_cmd, -0.5)
-        # ^^^ if the number that the motor command is reading is higher than 0.1,
-        # it will change it to 0.1 and if it is lower it will keep it there. This is a speed limit btw
-
-        if (
-            self.getAbsoluteEncoderPosition() > self.TARGET_POSITION_ARMED
-            or self.getAbsoluteEncoderPosition() < self.TARGET_POSITION_LIFT
-        ):
-            self.ClimberMotor.set(0.0)
-        self.ClimberMotor.set(Motor_cmd)
-        # self.sd_table.putNumber(self.nt_motor_cmd_value, Motor_cmd)
-
-        #     # RESET #
-        if self.ratchet_timer.isRunning():
-            if self.ratchet_timer.hasElapsed(self.RATCHET_TIMER_AMOUNT):
-                self.ratchet_timer.stop()
-                self.PID.setConstraints(self.constraints_RESET)
-                self.PID.setGoal(self.TARGET_POSITION_ARMED)
-
-    def motorDirect(self, motorSpeed: float):
-        if not self.home_finding_mode:
-            motor_cmd = motorSpeed / 10
-            self.ClimberMotor.set(motor_cmd)
-            self.sd_table.putNumber(self.nt_motor_cmd_value, motor_cmd)
-
-    #### HOME POSITION STUFF ####
-
-    def findHomePosition(self):
-        print("setting home")
-    # Reduce motor torque so we don't break anything!
-        self.motor_config.smartCurrentLimit(self.CURRENT_LIMIT_WEAK)
-        self.ClimberMotor.configure(
-            self.motor_config,
-            rev.SparkMax.ResetMode.kNoResetSafeParameters,
-            rev.SparkMax.PersistMode.kNoPersistParameters
-        )
-    # Get the ratchet out of the way
-        self.__disengageRatchet__()
-        self.ratchet_timer.restart()
-
-        self.home_timer.stop()
-        self.LastEncoderValue = self.motor_encoder.getPosition()
-        self.home_finding_mode = True
-
-    # def getArmPosition(self):
-    #         # This is all good we jsut need the home position defined
-    #         self.EncoderVal = self.motor_encoder.getPosition()
-    #         self.ArmPosition = self.EncoderVal / self.GEARRATIO - self.HomePosition
-    #         print(self.ArmPosition)
-
-
-    def testInit(self):
-        self.last_encoder_val = self.absolute_encoder.getPosition()
-        self.absolute_enc_offset = 0.0
-        self.motor_config.smartCurrentLimit(self.CURRENT_LIMIT_WEAK)
-        self.ClimberMotor.configure(
-            self.motor_config,
-            rev.SparkMax.ResetMode.kNoResetSafeParameters,
-            rev.SparkMax.PersistMode.kNoPersistParameters,
-        )
-
-    def testPeriodic(self):
-        self.sd_table.putNumber(
-            self.nt_abs_enc_value, self.getAbsoluteEncoderPosition()
-        )
-        self.sd_table.putNumber(self.nt_rel_enc_value, self.getMotorEncoderPosition())
-
-    ### AUTO HOME FINDING CODE BECAUSE I DON'T WANT TO LOSE IT ### > <
-    #                                                               ^
-
-    # finding home position - rest of the code
-
+        ### AUTO HOME FINDING CODE BECAUSE I DON'T WANT TO LOSE IT ### > <
         if self.home_finding_mode:
 
             current_encoder_value = self.motor_encoder.getPosition()
@@ -287,9 +212,84 @@ class climb_mechanism:
 
                  #   ^^^ If the motor is still running and the encoder hasn't changed,
                  #   ^^^ then we must be at the physical stop of the mechanism :DDD
+            self.LastEncoderValue = current_encoder_value
+            # ^^^ We set the last encoder value to be equal to what it is equal to currently
+            # ^^^ This is home position
+        # put climbing as false if home finding is not done so we don't break the motors :D
+        # self.sd_table.putNumber(
+        #     self.nt_abs_enc_value, self.getAbsoluteEncoderPosition()
+        # )
+        # self.sd_table.putNumber(self.nt_rel_enc_value, self.getMotorEncoderPosition())
 
-        
+    def periodic(self):
+        # CLIMBING #
+        current_location = self.getMotorEncoderPosition()
+        Motor_cmd = self.PID.calculate(current_location)
+        Motor_cmd = min(Motor_cmd, 0.5)
+        Motor_cmd = max(Motor_cmd, -0.5)
+        # ^^^ if the number that the motor command is reading is higher than 0.1,
+        # it will change it to 0.1 and if it is lower it will keep it there. This is a speed limit btw
 
-        self.LastEncoderValue = current_encoder_value
-        # ^^^ We set the last encoder value to be equal to what it is equal to currently
-        # ^^^ This is home position
+        if (
+            self.getMotorEncoderPosition() > self.TARGET_POSITION_ARMED
+            or self.getMotorEncoderPosition() < self.TARGET_POSITION_LIFT
+        ):
+            self.ClimberMotor.set(0.0)
+        self.ClimberMotor.set(Motor_cmd)
+        # self.sd_table.putNumber(self.nt_motor_cmd_value, Motor_cmd)
+
+        #     # RESET #
+        if self.ratchet_timer.isRunning():
+            if self.ratchet_timer.hasElapsed(self.RATCHET_TIMER_AMOUNT):
+                self.ratchet_timer.stop()
+                self.PID.setConstraints(self.constraints_RESET)
+                self.PID.setGoal(self.TARGET_POSITION_ARMED)
+
+    def motorDirect(self, motorSpeed: float):
+        if not self.home_finding_mode:
+            motor_cmd = motorSpeed / 10
+            self.ClimberMotor.set(motor_cmd)
+            self.sd_table.putNumber(self.nt_motor_cmd_value, motor_cmd)
+
+    #### HOME POSITION STUFF ####
+    def findHomePosition(self):
+        print("setting home")
+    # Reduce motor torque so we don't break anything!
+        self.motor_config.smartCurrentLimit(self.CURRENT_LIMIT_WEAK)
+        self.ClimberMotor.configure(
+            self.motor_config,
+            rev.SparkMax.ResetMode.kNoResetSafeParameters,
+            rev.SparkMax.PersistMode.kNoPersistParameters
+        )
+    # Get the ratchet out of the way
+        self.__disengageRatchet__()
+        self.ratchet_timer.restart()
+
+        self.home_timer.stop()
+        self.LastEncoderValue = self.motor_encoder.getPosition()
+        self.home_finding_mode = True
+
+    # def getArmPosition(self):
+    #         # This is all good we jsut need the home position defined
+    #         self.EncoderVal = self.motor_encoder.getPosition()
+    #         self.ArmPosition = self.EncoderVal / self.GEARRATIO - self.HomePosition
+    #         print(self.ArmPosition)
+
+
+    def testInit(self):
+        self.last_encoder_val = self.motor_encoder.getPosition()
+        self.absolute_enc_offset = 0.0
+        self.motor_config.smartCurrentLimit(self.CURRENT_LIMIT_WEAK)
+        self.ClimberMotor.configure(
+            self.motor_config,
+            rev.SparkMax.ResetMode.kNoResetSafeParameters,
+            rev.SparkMax.PersistMode.kNoPersistParameters,
+        )
+
+    def testPeriodic(self):
+        self.sd_table.putNumber(
+            self.nt_abs_enc_value, self.getMotorEncoderPosition()
+        )
+        self.sd_table.putNumber(self.nt_rel_enc_value, self.getMotorEncoderPosition())
+
+    

@@ -59,7 +59,13 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         self.container.configure_button_bindings_auto()
 
     def autonomousPeriodic(self):
-        pass
+        # Auto Homefinding
+        if self.pxn_fightstick.getRawButtonPressed(7):
+            self.Climbgal_L.findHomePosition()
+        if self.pxn_fightstick.getRawButtonPressed(8):
+            self.Climbgal_R.findHomePosition()
+        self.Climbgal_L.AutonomousPeriodic()
+        self.Climbgal_R.AutonomousPeriodic()
 
     def autonomousExit(self):
         commands2.CommandScheduler.getInstance().cancelAll()
@@ -80,11 +86,7 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         self.Climbgal_L.periodic()
         self.Climbgal_R.periodic()
 
-
-        if self.pxn_fightstick.getRawButtonPressed(7):
-            self.Climbgal_L.findHomePosition()
-        if self.pxn_fightstick.getRawButtonPressed(8):
-            self.Climbgal_R.findHomePosition
+        
             # self.Climbgal_L.__engageRatchet__()
             # self.Climbgal_R.__engageRatchet__()
         if self.pxn_fightstick.getRawButtonPressed(9):
@@ -109,6 +111,8 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
     def testPeriodic(self):    
         self.Climbgal_L.testPeriodic()
         self.Climbgal_R.testPeriodic()
+
+        
 
         # Left Thumbstick
         joystickAxis_L = -self.goodStick.getLeftY()
