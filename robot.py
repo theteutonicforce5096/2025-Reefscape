@@ -19,8 +19,10 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         CLIMB_MOTOR_L_ID = 61
         CLIMB_MOTOR_R_ID = 62
 
-        self.pxn_fightstick = wpilib.Joystick(2)
+        self.pxn_fightstick = wpilib.Joystick(0)
         self.goodStick = wpilib.XboxController(1)
+        # The logitech controller does NOT have enough axis for test mode :((( 
+        # The xbox controller only works in test mode- for the way this code is written (Jay)
         #TODO: Check joystick situation. Here we have two joysticks defined; in robot_container.py we have joystick also defined on port 0. We never actually use 3 joysticks, so...?
 
         # Initializing girly pop climbgal left
