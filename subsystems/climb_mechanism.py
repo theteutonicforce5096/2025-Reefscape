@@ -184,37 +184,9 @@ class climb_mechanism:
             rev.SparkMax.PersistMode.kNoPersistParameters,
         )
 
-    def AutonomousPeriodic(self): #TODO: 
+    
 
-        ### AUTO HOME FINDING CODE BECAUSE I DON'T WANT TO LOSE IT ### > <
-        if self.home_finding_mode:
-
-            current_encoder_value = self.motor_encoder.getPosition()
-
-            # This if statement takes care of waiting until the ratchet gets out of the way
-            if self.ratchet_timer.isRunning():
-                if self.ratchet_timer.hasElapsed(self.RATCHET_MOVE_TIME):
-                    self.ratchet_timer.stop()
-                    print("ratchet timer elapsed")
-                    self.ClimberMotor.set(0.08)
-                    self.home_timer.restart()
-
-            # This if statement looks for the climber to reach the end of its travel
-            if self.home_timer.isRunning():
-                if self.home_timer.advanceIfElapsed(1.0):
-                    if abs(current_encoder_value - self.LastEncoderValue) <= 0.001:
-                        # Reached the end of travel
-                        self.ClimberMotor.set(0.0)
-                        self.home_timer.stop()
-                        print("Found home")
-                        self.motor_encoder.setPosition(0.0)
-                        self.home_finding_mode = False
-
-                 #   ^^^ If the motor is still running and the encoder hasn't changed,
-                 #   ^^^ then we must be at the physical stop of the mechanism :DDD
-            self.LastEncoderValue = current_encoder_value
-            # ^^^ We set the last encoder value to be equal to what it is equal to currently
-            # ^^^ This is home position
+       
         # put climbing as false if home finding is not done so we don't break the motors :D
         # self.sd_table.putNumber(
         #     self.nt_abs_enc_value, self.getAbsoluteEncoderPosition()
@@ -291,5 +263,35 @@ class climb_mechanism:
             self.nt_abs_enc_value, self.getMotorEncoderPosition()
         )
         self.sd_table.putNumber(self.nt_rel_enc_value, self.getMotorEncoderPosition())
+
+         ### AUTO HOME FINDING CODE BECAUSE I DON'T WANT TO LOSE IT ### > <
+        if self.home_finding_mode:
+
+            current_encoder_value = self.motor_encoder.getPosition()
+
+            # This if statement takes care of waiting until the ratchet gets out of the way
+            if self.ratchet_timer.isRunning():
+                if self.ratchet_timer.hasElapsed(self.RATCHET_MOVE_TIME):
+                    self.ratchet_timer.stop()
+                    print("ratchet timer elapsed")
+                    self.ClimberMotor.set(0.08)
+                    self.home_timer.restart()
+
+            # This if statement looks for the climber to reach the end of its travel
+            if self.home_timer.isRunning():
+                if self.home_timer.advanceIfElapsed(1.0):
+                    if abs(current_encoder_value - self.LastEncoderValue) <= 0.001:
+                        # Reached the end of travel
+                        self.ClimberMotor.set(0.0)
+                        self.home_timer.stop()
+                        print("Found home")
+                        self.motor_encoder.setPosition(0.0)
+                        self.home_finding_mode = False
+
+                 #   ^^^ If the motor is still running and the encoder hasn't changed,
+                 #   ^^^ then we must be at the physical stop of the mechanism :DDD
+            self.LastEncoderValue = current_encoder_value
+            # ^^^ We set the last encoder value to be equal to what it is equal to currently
+            # ^^^ This is home position
 
     
