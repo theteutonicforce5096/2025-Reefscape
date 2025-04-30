@@ -15,13 +15,13 @@ class RobotContainer:
             self.wrist.run(lambda: self.wrist.spin_motor(0))
         )
         
-        # self.controller.povUp().whileTrue(
-        #     self.elevator.run(lambda: self.elevator.raise_setpoint_small())
-        # )
+        self.controller.povUp().whileTrue(
+            self.elevator.run(lambda: self.elevator.raise_setpoint_small())
+        )
         
-        # self.controller.povDown().whileTrue(
-        #     self.elevator.run(lambda: self.elevator.lower_setpoint_small())
-        # )
+        self.controller.povDown().whileTrue(
+            self.elevator.run(lambda: self.elevator.lower_setpoint_small())
+        )
 
         # self.controller.povRight().onTrue(
         #     self.elevator.run(lambda: self.elevator.raise_setpoint())
@@ -43,9 +43,9 @@ class RobotContainer:
         #     self.elevator.run(lambda: self.elevator.spin_motor(.05))
         # )
 
-        self.controller.povLeft().whileTrue(
-            self.elevator.run(lambda: self.elevator.set_setpoint(25))
-        )
+        # self.controller.povLeft().whileTrue(
+        #     self.elevator.run(lambda: self.elevator.set_setpoint(25))
+        # )
 
         self.controller.x().onTrue(
             self.elevator.runOnce(
