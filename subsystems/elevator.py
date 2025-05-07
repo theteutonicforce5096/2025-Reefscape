@@ -1,13 +1,14 @@
-# from commands2 import Subsystem
-# import rev
-# from wpimath.controller import ProfiledPIDController, PIDController
-# from wpimath.trajectory import TrapezoidProfile
-# from wpimath.controller import ElevatorFeedforward
-# from networktables import NetworkTables
+from commands2 import Subsystem
+import rev
+from wpimath.controller import ProfiledPIDController, PIDController
+from wpimath.trajectory import TrapezoidProfile
+from wpimath.controller import ElevatorFeedforward
+from networktables import NetworkTables
 
-# class Elevator(Subsystem):
-#     def __init__(self, CAN_ID):
-#         Subsystem.__init__(self)
+class Elevator(Subsystem):
+    def __init__(self, CAN_ID):
+        Subsystem.__init__(self)
+        pass
 
 #         NetworkTables.initialize(server='roborio-5096-frc.local')
 #         self.sd_table = NetworkTables.getTable('SmartDashboard')
@@ -35,11 +36,13 @@
 #         self.encoder.setPosition(0.0)
 #         self.setpoint = 0
 
-#     def reset_setpoint(self):
+    def reset_setpoint(self):
+        pass
 #         self.encoder.setPosition(0.0)
 #         self.setpoint = 0
 
-#     def run_pid(self):
+    def run_pid(self):
+        pass
 #         current_position = self.encoder.getPosition()
 #         pid_output = self.pid_controller.calculate(current_position, self.setpoint)
 #         feedforward = self.feedforward.calculate((self.encoder.getVelocity() * (1.067/120)) / 60)
@@ -56,16 +59,20 @@
 #             'elevator_motor_setpoint', self.setpoint
 #         )
     
-#     def spin_motor(self, percent):
+    def spin_motor(self, percent):
+        pass
 #         self.motor.set(percent)
     
-#     def raise_setpoint(self):
+    def raise_setpoint(self):
+        pass
 #         if self.setpoint < 100:
 #             self.setpoint += 1
         
-#     def lower_setpoint(self):
+    def lower_setpoint(self):
+        pass
 #         if self.setpoint >= 1:
 #             self.setpoint -= 1
 
-#     def set_setpoint(self, setpoint):
+    def set_setpoint(self, setpoint):
+        pass
 #         self.setpoint = setpoint

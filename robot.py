@@ -3,7 +3,6 @@ import wpilib
 from networktables import NetworkTables
 
 from robot_container import RobotContainer
-
 from subsystems import climb_mechanism
 
 class ReefscapeRobot(commands2.TimedCommandRobot):
@@ -61,21 +60,29 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         self.container.configure_button_bindings_auto()
 
     def autonomousPeriodic(self):
-        # Auto Homefinding
         pass
 
     def autonomousExit(self):
         commands2.CommandScheduler.getInstance().cancelAll()
 
     def teleopInit(self):
+        # Auto Homefinding
+        self.Climbgal_L.autoperiodic()
+        self.Climbgal_R.autoperiodic()
+
+        self.Climbgal_L.findHomePosition()
+        print("Sanity Check Left")
+        self.Climbgal_R.findHomePosition()
+        print("Sanity Check Right")
+
         commands2.CommandScheduler.getInstance().cancelAll()
         self.container.configure_button_bindings_teleop()
         
         self.Climbgal_L.teleopInit()
         self.Climbgal_R.teleopInit()
 
-        self.Climbgal_L.reset()
-        self.Climbgal_R.reset()
+        # self.Climbgal_L.reset()
+        # self.Climbgal_R.reset()
 
     def teleopPeriodic(self):
         # self.container.elevator.run_pid()
@@ -110,12 +117,10 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         self.Climbgal_L.testPeriodic()
         self.Climbgal_R.testPeriodic()
 
-        if self.pxn_fightstick.getRawButtonPressed(7):
-            self.Climbgal_L.findHomePosition()
-            print("Sanity Check Left")
-        if self.pxn_fightstick.getRawButtonPressed(8):
-            self.Climbgal_R.findHomePosition()
-            print("Sanity Check Right")
+        # if self.pxn_fightstick.getRawButtonPressed(7):
+            
+        # if self.pxn_fightstick.getRawButtonPressed(8):
+            
 
         
 
