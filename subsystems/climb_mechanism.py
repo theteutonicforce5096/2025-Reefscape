@@ -28,8 +28,7 @@ class climb_mechanism:
         servo_PWM_ID: int,
         motor_CAN_ID: int,
         dashboard_prefix: str,
-        ABSOLUTE_MIN_POSITION: float,
-        ABSOLUTE_MAX_POSITION: float,
+        LIFT_POSITION:float
     ):
         self.nt_rel_enc_value = dashboard_prefix + "_rel_enc"
         self.nt_abs_enc_value = dashboard_prefix + "_abs_enc"
@@ -64,8 +63,8 @@ class climb_mechanism:
         self.motor_encoder = self.ClimberMotor.getEncoder()
 
 
-        self.TARGET_POSITION_ARMED = 0.02
-        self.TARGET_POSITION_LIFT = 0.2
+        self.TARGET_POSITION_ARMED = -0.03
+        self.TARGET_POSITION_LIFT = -0.35
         # self.absolute_encoder = self.ClimberMotor.getAbsoluteEncoder()
        
 #  read absolute encoder
@@ -183,6 +182,15 @@ class climb_mechanism:
             rev.SparkMax.ResetMode.kNoResetSafeParameters,
             rev.SparkMax.PersistMode.kNoPersistParameters,
         )
+        
+
+
+    def testPeriodic(self):
+        self.sd_table.putNumber(
+            self.nt_abs_enc_value, self.getMotorEncoderPosition()
+        )
+        self.sd_table.putNumber(self.nt_rel_enc_value, self.getMotorEncoderPosition())
+
          ### AUTO HOME FINDING CODE BECAUSE I DON'T WANT TO LOSE IT ### > <
         if self.home_finding_mode:
 
@@ -212,15 +220,6 @@ class climb_mechanism:
             self.LastEncoderValue = current_encoder_value
             # ^^^ We set the last encoder value to be equal to what it is equal to currently
             # ^^^ This is home position
-
-
-    def testPeriodic(self):
-        self.sd_table.putNumber(
-            self.nt_abs_enc_value, self.getMotorEncoderPosition()
-        )
-        self.sd_table.putNumber(self.nt_rel_enc_value, self.getMotorEncoderPosition())
-
-        
     
 
     
@@ -241,13 +240,16 @@ class climb_mechanism:
         # ^^^ if the number that the motor command is reading is higher than 0.1,
         # it will change it to 0.1 and if it is lower it will keep it there. This is a speed limit btw
 
+
+        # If arm is going outside of physical limits then set to 0 
         if (
-            self.getMotorEncoderPosition() > self.TARGET_POSITION_ARMED
-            or self.getMotorEncoderPosition() < self.TARGET_POSITION_LIFT
+            (self.getMotorEncoderPosition() > self.TARGET_POSITION_ARMED and Motor_cmd > 0)
+            or (self.getMotorEncoderPosition() < self.TARGET_POSITION_LIFT and Motor_cmd < 0)
         ):
-            self.ClimberMotor.set(0.0)
+            Motor_cmd = 0.0
         self.ClimberMotor.set(Motor_cmd)
         # self.sd_table.putNumber(self.nt_motor_cmd_value, Motor_cmd)
+         
 
         #     # RESET #
         if self.ratchet_timer.isRunning():
