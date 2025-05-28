@@ -14,7 +14,7 @@ from wpimath.trajectory import TrapezoidProfile
 class climb_mechanism:
     GEARRATIO = 155.6 # TODO: Figure out the new gear ratio for the relative encoder
     CURRENT_LIMIT_WEAK = 4  # Amps
-    CURRENT_LIMIT_STRONG = 4  # Amps
+    CURRENT_LIMIT_STRONG = 35  # Amps
     RATCHET_MOVE_TIME = 1.25  # seconds
     RATCHET_TIMER_AMOUNT = 1  # seconds
     MAX_SPEED_CLIMB = 0.20
@@ -64,7 +64,7 @@ class climb_mechanism:
 
 
         self.TARGET_POSITION_ARMED = -0.03
-        self.TARGET_POSITION_LIFT = -0.35
+        self.TARGET_POSITION_LIFT = -0.4
         # self.absolute_encoder = self.ClimberMotor.getAbsoluteEncoder()
        
 #  read absolute encoder
@@ -107,7 +107,7 @@ class climb_mechanism:
         self.constraints_RESET = TrapezoidProfile.Constraints(
             maxVelocity=self.MAX_SPEED_RESET, maxAcceleration=self.MAX_ACCEL_RESET
         )
-        self.PID = ProfiledPIDController(10, 0, 0, constraints=self.constraints_CLIMB)
+        self.PID = ProfiledPIDController(10, .1, 0, constraints=self.constraints_CLIMB)
 
         # Initalizing Encoder - We are using absolute
       
