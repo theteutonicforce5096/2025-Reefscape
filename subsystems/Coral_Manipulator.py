@@ -16,7 +16,7 @@ class coral_manipulator:
         #Configuring Motor
         self.sucker_config = rev.SparkBaseConfig
         self.sucker = rev.SparkMax(
-            50, rev.SparkMax.MotorType.kBrushless
+            51, rev.SparkMax.MotorType.kBrushless
         )
         self.sucker.configure(
             self.sucker_config,

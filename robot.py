@@ -9,7 +9,8 @@ class ReefscapeRobot(wpilib.TimedRobot):
     def robotInit(self):
        self.goodStick = wpilib.XboxController(1)
        self.pxn_fightstick = wpilib.Joystick(0)
-       self.coral_manipulator = coral_manipulator 
+       
+       self.coral_manipulator = coral_manipulator() 
 
     def teleopInit(self):
         pass
