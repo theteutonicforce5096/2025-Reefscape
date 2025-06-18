@@ -12,10 +12,7 @@ class RobotContainer:
         self.elevator_controller = commands2.button.CommandJoystick(1)
         
     def configure_button_bindings_teleop(self):
-        self.wrist.setDefaultCommand(
-            self.wrist.run(lambda: self.wrist.spin_motor(0))
-        )
-        
+
         self.controller.povUp().whileTrue(
             self.elevator.run(lambda: self.elevator.raise_setpoint_small())
         )
@@ -70,16 +67,24 @@ class RobotContainer:
 
         self.controller.x().onTrue(
             self.elevator.runOnce(
-                lambda: print(self.elevator.encoder.getPosition(), self.elevator.setpoint)
+                lambda: print(self.wrist.encoder.getPosition(), self.wrist.setpoint)
             )
         )
              
         self.controller.y().whileTrue(
-            self.wrist.run(lambda: self.wrist.spin_motor(0.1))
+            self.wrist.run(lambda: self.wrist.set_setpoint(31))
         )
         
         self.controller.a().whileTrue(
-            self.wrist.run(lambda: self.wrist.spin_motor(-0.1))
+            self.wrist.run(lambda: self.wrist.set_setpoint(0))
+        )
+        
+        self.controller.rightTrigger().onTrue(
+            self.wrist.runOnce(lambda: self.wrist.find_home())
+        )
+        
+        self.controller.leftTrigger().onTrue(
+            self.wrist.runOnce(lambda: self.wrist.set_setpoint(15))
         )
     
     def configure_button_bindings_test(self):

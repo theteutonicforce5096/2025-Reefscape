@@ -1,5 +1,8 @@
 from commands2 import Subsystem
 from commands2.cmd import SequentialCommandGroup, WaitCommand
+from wpimath.controller import ProfiledPIDController, PIDController
+from wpimath.trajectory import TrapezoidProfile
+from wpimath.controller import ArmFeedforward
 import rev
 
 class Wrist(Subsystem):
@@ -16,6 +19,7 @@ class Wrist(Subsystem):
             .smartCurrentLimit(20) # 20-40 recommended
             .inverted(False) # inverted is CL, regular is CCL
         )
+        #BOTH BUTTONS WERE GOING BACKWARDS !!! FIXME TODO HELP
         
         self.motor_config_find_home = (
             rev.SparkMaxConfig()
@@ -25,17 +29,26 @@ class Wrist(Subsystem):
             .inverted(False) # inverted is CL, regular is CCL
         )
         
-        self._configure_motor(self.motor_config)
+        # self._configure_motor(self.motor_config)
         
-    def _configure_motor(self, motor_config):
         self.motor.configure(
-            motor_config, 
+            self.motor_config,
             rev.SparkBase.ResetMode.kResetSafeParameters,
             rev.SparkBase.PersistMode.kNoPersistParameters
         )
         
+        self.pid_controller = ProfiledPIDController(.035, 0, 0, TrapezoidProfile.Constraints(80, 60))
+        self.feedforward = ArmFeedforward(0, 0, 0, 0)
+        
+        self.setpoint = -1
+        
     def find_home(self):
-        self._configure_motor(self.motor_config_find_home)
+        # self._configure_motor(self.motor_config_find_home)
+        self.motor.configure(
+            self.motor_config_find_home,
+            rev.SparkBase.ResetMode.kResetSafeParameters,
+            rev.SparkBase.PersistMode.kNoPersistParameters
+        )
         SequentialCommandGroup(
             self.runOnce(lambda: self.spin_motor(-0.1)),
             WaitCommand(0.1),
@@ -45,7 +58,8 @@ class Wrist(Subsystem):
                 lambda: round(self.encoder.getVelocity(), 2) == 0
             ),
             self.runOnce(lambda: self.reset_encoder()),
-            self.runOnce(lambda: self.spin_motor(0))
+            self.runOnce(lambda: self.spin_motor(0)),
+            self.runOnce(lambda: self.set_setpoint(-1))
         ).schedule()
         
     def reset_encoder(self):
@@ -54,11 +68,21 @@ class Wrist(Subsystem):
     def spin_motor(self, percent):
         self.motor.set(percent)       
         
-    # def run_pid(self, goal):
-    #     pos = self.get_encoder_value()
-    #     speed = self.pid_controller.calculate(pos, goal)
-    #     self.motor_speed = speed
-    #     self.spin_motor(speed)
+    def run_pid(self):
+        current_position = self.encoder.getPosition()
+        output = self.pid_controller.calculate(current_position, self.setpoint)
+        self.spin_motor(output)
+        
+    def set_setpoint(self, setpoint):
+        self.setpoint = setpoint
+        
+    def raise_setpoint(self):   # 28.2 rotations = 42 degrees above the horizontal
+        if self.setpoint < 31:
+            self.setpoint += 1
+        
+    def lower_setpoint(self):
+        if self.setpoint >= 1:
+            self.setpoint -= 1
         
     # def get_encoder_value(self):
     #     return (self.encoder.getPosition())
