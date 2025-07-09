@@ -11,6 +11,9 @@ class ReefscapeRobot(wpilib.TimedRobot):
        self.pxn_fightstick = wpilib.Joystick(0)
        
        self.coral_manipulator = coral_manipulator() 
+       
+       #Configuring Timer
+       self.intake_timer = wpilib.Timer()
 
     def teleopInit(self):
         pass
@@ -18,7 +21,11 @@ class ReefscapeRobot(wpilib.TimedRobot):
 
     def teleopPeriodic(self):
         if self.pxn_fightstick.getRawButtonPressed(1):
+            print("Sanity Check")
+            self.intake_timer.restart()
             self.coral_manipulator.intake()
+        if self.intake_timer.hasElapsed(3):
+            self.coral_manipulator.stop()
        
     def teleopExit(self):
         pass
