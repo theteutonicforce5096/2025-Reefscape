@@ -3,7 +3,6 @@ import wpilib
 from networktables import NetworkTables
 
 from robot_container import RobotContainer
-
 from subsystems import climb_mechanism
 from subsystems.Coral_Manipulator import coral_manipulator
 
@@ -31,27 +30,23 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         #TODO: Check joystick situation. Here we have two joysticks defined; in robot_container.py we have joystick also defined on port 0. We never actually use 3 joysticks, so...?
 
         # Initializing girly pop climbgal left
-        self.ABSOLUTE_MAX_POSITION_L = 0.861389338970184
-        self.ABSOLUTE_MIN_POSITION_L = 0.185304895043373
+        self.LIFT_POSITION_L = -0.137256056070328
         # Range of 0.612
         self.Climbgal_L = climb_mechanism.climb_mechanism(
             RATCHET_SERVO_L_ID,
             CLIMB_MOTOR_L_ID,
             "climber_L",
-            self.ABSOLUTE_MIN_POSITION_L,
-            self.ABSOLUTE_MAX_POSITION_L,
+            self.LIFT_POSITION_L,
         )
 
         # Initializing girly pop climbgal right
-        self.ABSOLUTE_MAX_POSITION_R = 0.800958693027496 # max - 0.10
-        self.ABSOLUTE_MIN_POSITION_R = 0.212636172771454 # min + 0.10
+        self.LIFT_POSITION_R = -0.157760068774223
         # Range of 0.606
         self.Climbgal_R = climb_mechanism.climb_mechanism(
             RATCHET_SERVO_R_ID,
             CLIMB_MOTOR_R_ID,
             "climber_R",
-            self.ABSOLUTE_MIN_POSITION_R,
-            self.ABSOLUTE_MAX_POSITION_R,
+            self.LIFT_POSITION_R
         )
 
         # Network tables are used for Test Mode
@@ -66,26 +61,22 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         self.container.configure_button_bindings_auto()
 
     def autonomousPeriodic(self):
-        # Auto Homefinding
-        if self.pxn_fightstick.getRawButtonPressed(7):
-            self.Climbgal_L.findHomePosition()
-        if self.pxn_fightstick.getRawButtonPressed(8):
-            self.Climbgal_R.findHomePosition()
-        self.Climbgal_L.AutonomousPeriodic()
-        self.Climbgal_R.AutonomousPeriodic()
+        pass
 
     def autonomousExit(self):
         commands2.CommandScheduler.getInstance().cancelAll()
 
     def teleopInit(self):
+        # Auto Homefinding
+
         commands2.CommandScheduler.getInstance().cancelAll()
         self.container.configure_button_bindings_teleop()
         
         self.Climbgal_L.teleopInit()
         self.Climbgal_R.teleopInit()
 
-        self.Climbgal_L.reset()
-        self.Climbgal_R.reset()
+        # self.Climbgal_L.reset()
+        # self.Climbgal_R.reset()
 
     def teleopPeriodic(self):
         # self.container.elevator.run_pid()
@@ -122,9 +113,16 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         self.Climbgal_R.testInit()
         self.Climbgal_L.testInit()
 
-    def testPeriodic(self):    
+
+    def testPeriodic(self):  
         self.Climbgal_L.testPeriodic()
         self.Climbgal_R.testPeriodic()
+
+        if self.pxn_fightstick.getRawButtonPressed(7):
+             self.Climbgal_L.findHomePosition()
+            
+        if self.pxn_fightstick.getRawButtonPressed(8):
+             self.Climbgal_R.findHomePosition()
 
         # Left Thumbstick
         joystickAxis_L = -self.goodStick.getLeftY()
