@@ -5,6 +5,7 @@ from networktables import NetworkTables
 from robot_container import RobotContainer
 
 from subsystems import climb_mechanism
+from subsystems.Coral_Manipulator import coral_manipulator
 
 class ReefscapeRobot(commands2.TimedCommandRobot):
     """
@@ -13,6 +14,10 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
     
     def robotInit(self):
         self.container = RobotContainer()
+        self.coral_manipulator = coral_manipulator() 
+       
+        #Configuring Timer
+        self.intake_timer = wpilib.Timer()
 
         RATCHET_SERVO_L_ID = 0
         RATCHET_SERVO_R_ID = 1
@@ -91,12 +96,19 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         
             # self.Climbgal_L.__engageRatchet__()
             # self.Climbgal_R.__engageRatchet__()
+        if self.pxn_fightstick.getRawButtonPressed(1):
+            self.intake_timer.restart()
+            self.coral_manipulator.intake()
         if self.pxn_fightstick.getRawButtonPressed(9):
             self.Climbgal_L.climb()
             self.Climbgal_R.climb()
         if self.pxn_fightstick.getRawButtonPressed(10):
             self.Climbgal_L.reset()
             self.Climbgal_R.reset()
+
+        if self.intake_timer.hasElapsed(3):
+            self.coral_manipulator.stop()
+            self.intake_timer.stop()
 
     def teleopExit(self):
         commands2.CommandScheduler.getInstance().cancelAll()
@@ -113,8 +125,6 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
     def testPeriodic(self):    
         self.Climbgal_L.testPeriodic()
         self.Climbgal_R.testPeriodic()
-
-        
 
         # Left Thumbstick
         joystickAxis_L = -self.goodStick.getLeftY()
