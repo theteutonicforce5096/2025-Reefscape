@@ -61,7 +61,8 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         self.container.configure_button_bindings_auto()
 
     def autonomousPeriodic(self):
-        pass
+        self.container.elevator.run_pid()
+        self.container.wrist.run_pid()
 
     def autonomousExit(self):
         commands2.CommandScheduler.getInstance().cancelAll()
@@ -84,9 +85,12 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         self.Climbgal_L.periodic()
         self.Climbgal_R.periodic()
 
-        
-            # self.Climbgal_L.__engageRatchet__()
-            # self.Climbgal_R.__engageRatchet__()
+        self.container.elevator.run_pid()
+        self.container.wrist.run_pid()
+
+    
+        # self.Climbgal_L.__engageRatchet__()
+        # self.Climbgal_R.__engageRatchet__()
         if self.pxn_fightstick.getRawButtonPressed(1):
             self.intake_timer.restart()
             self.coral_manipulator.intake()
