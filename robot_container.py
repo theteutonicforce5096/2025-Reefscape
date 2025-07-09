@@ -5,7 +5,6 @@ from commands2.cmd import print_
 from subsystems.swerve_drive_constants import SwerveDriveConstants
 from subsystems.elevator import Elevator
 from subsystems.wrist import Wrist
-from subsystems.intake import Intake
 
 from pathplannerlib.auto import AutoBuilder, PathConstraints
 from pathplannerlib.path import PathPlannerPath, GoalEndState
