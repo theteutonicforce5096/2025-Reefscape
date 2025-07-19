@@ -18,6 +18,7 @@ class RobotContainer:
     def __init__(self):
         self.elevator = Elevator(40)
         self.wrist = Wrist(50)
+        self.drivetrain = SwerveDriveConstants.create_drivetrain()
 
         # Initialize controller
         self.controller = commands2.button.CommandXboxController(0)
@@ -143,6 +144,7 @@ class RobotContainer:
         self.controller.a().whileTrue(
             self.wrist.run(lambda: self.wrist.set_setpoint(0))
         )
+        #Conflicting controls: Pressing 'a' also activated the intake/outtake motors
         
         self.controller.rightTrigger().onTrue(
             self.wrist.runOnce(lambda: self.wrist.find_home())
@@ -151,6 +153,15 @@ class RobotContainer:
         self.controller.leftTrigger().onTrue(
             self.wrist.runOnce(lambda: self.wrist.set_setpoint(15))
         )
+
+        self.controller.rightBumper().whileTrue(
+            self.wrist.run(lambda: self.wrist.raise_setpoint())
+        )
+
+        self.controller.leftBumper().whileTrue(
+            self.wrist.run(lambda: self.wrist.lower_setpoint())
+        )
+
     
     def configure_button_bindings_test(self):
         # Set the SysId routine to run

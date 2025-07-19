@@ -72,11 +72,11 @@ class Elevator(Subsystem):
 
     def raise_setpoint_small(self):
         if self.setpoint < 95:   #smoked at top of 105, 100 ify
-            self.setpoint += 1
+            self.setpoint += .5
         
     def lower_setpoint_small(self):
         if self.setpoint >= 1:
-            self.setpoint -= 1
+            self.setpoint -= .5
 
     def set_setpoint(self, setpoint):
         self.setpoint = setpoint

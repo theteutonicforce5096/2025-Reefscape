@@ -4,7 +4,7 @@ from networktables import NetworkTables
 
 from robot_container import RobotContainer
 from subsystems import climb_mechanism
-from subsystems.Coral_Manipulator import coral_manipulator
+from subsystems.coral_manipulator import Coral_Manipulator
 
 class ReefscapeRobot(commands2.TimedCommandRobot):
     """
@@ -13,7 +13,7 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
     
     def robotInit(self):
         self.container = RobotContainer()
-        self.coral_manipulator = coral_manipulator() 
+        self.coral_manipulator = Coral_Manipulator() 
        
         #Configuring Timer
         self.intake_timer = wpilib.Timer()
@@ -59,6 +59,7 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
     def autonomousInit(self):
         commands2.CommandScheduler.getInstance().cancelAll()
         self.container.configure_button_bindings_auto()
+        self.container.wrist.find_home()
 
     def autonomousPeriodic(self):
         self.container.elevator.run_pid()

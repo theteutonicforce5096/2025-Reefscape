@@ -1,5 +1,5 @@
 from commands2 import Subsystem
-from commands2.cmd import SequentialCommandGroup, WaitCommand
+from commands2.cmd import SequentialCommandGroup, WaitCommand, print_
 
 from wpimath.controller import ProfiledPIDController, PIDController
 from wpimath.trajectory import TrapezoidProfile
@@ -19,9 +19,8 @@ class Wrist(Subsystem):
             .voltageCompensation(12.0)
             .setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
             .smartCurrentLimit(20) # 20-40 recommended
-            .inverted(False) # inverted is CL, regular is CCL
+            .inverted(True) # inverted is CL, regular is CCL
         )
-        #BOTH BUTTONS WERE GOING BACKWARDS !!! FIXME TODO HELP
         
         self.motor_config_find_home = (
             rev.SparkMaxConfig()
@@ -42,7 +41,7 @@ class Wrist(Subsystem):
         self.pid_controller = ProfiledPIDController(.035, 0, 0, TrapezoidProfile.Constraints(80, 60))
         self.feedforward = ArmFeedforward(0, 0, 0, 0)
         
-        self.setpoint = -1
+        self.setpoint = 0
         
     def find_home(self):
         # self._configure_motor(self.motor_config_find_home)
@@ -57,7 +56,7 @@ class Wrist(Subsystem):
             self.run(
                 lambda: self.spin_motor(-0.05)
             ).until(
-                lambda: round(self.encoder.getVelocity(), 2) == 0
+                lambda: round(self.encoder.getVelocity(), 0) == 0
             ),
             self.runOnce(lambda: self.reset_encoder()),
             self.runOnce(lambda: self.spin_motor(0)),
@@ -68,8 +67,8 @@ class Wrist(Subsystem):
         self.encoder.setPosition(0) 
 
     def spin_motor(self, percent):
-        self.motor.set(percent)       
-        
+        self.motor.set(percent)
+
     def run_pid(self):
         current_position = self.encoder.getPosition()
         output = self.pid_controller.calculate(current_position, self.setpoint)

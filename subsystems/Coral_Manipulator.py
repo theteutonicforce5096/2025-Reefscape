@@ -9,8 +9,7 @@ from wpimath.controller import PIDController
 from wpimath.controller import ProfiledPIDController
 from wpimath.trajectory import TrapezoidProfile
 
-
-class coral_manipulator():
+class Coral_Manipulator:
    
     def __init__(self):
         
