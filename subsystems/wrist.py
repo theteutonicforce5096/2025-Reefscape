@@ -60,7 +60,7 @@ class Wrist(Subsystem):
             ),
             self.runOnce(lambda: self.reset_encoder()),
             self.runOnce(lambda: self.spin_motor(0)),
-            self.runOnce(lambda: self.set_setpoint(-1))
+            self.runOnce(lambda: self.set_setpoint(3))
         ).schedule()
         
     def reset_encoder(self):

@@ -15,16 +15,16 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         self.container = RobotContainer()
         self.coral_manipulator = Coral_Manipulator() 
        
-        #Configuring Timer
-        self.intake_timer = wpilib.Timer()
+        # Configuring Timer
+        # self.intake_timer = wpilib.Timer()
 
         RATCHET_SERVO_L_ID = 0
         RATCHET_SERVO_R_ID = 1
         CLIMB_MOTOR_L_ID = 61
         CLIMB_MOTOR_R_ID = 62
 
-        self.pxn_fightstick = wpilib.Joystick(0)
-        self.goodStick = wpilib.XboxController(1)
+        self.pxn_fightstick = wpilib.Joystick(1)
+        self.goodStick = wpilib.XboxController(0)
         # The logitech controller does NOT have enough axis for test mode :((( 
         # The xbox controller only works in test mode- for the way this code is written (Jay)
         #TODO: Check joystick situation. Here we have two joysticks defined; in robot_container.py we have joystick also defined on port 0. We never actually use 3 joysticks, so...?
@@ -60,11 +60,15 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         commands2.CommandScheduler.getInstance().cancelAll()
         self.container.configure_button_bindings_auto()
         self.container.wrist.find_home()
+        self.Climbgal_L.findHomePosition()
+        self.Climbgal_R.findHomePosition()
 
     def autonomousPeriodic(self):
         self.container.elevator.run_pid()
         self.container.wrist.run_pid()
-
+        self.Climbgal_L.testPeriodic()
+        self.Climbgal_R.testPeriodic()
+        
     def autonomousExit(self):
         commands2.CommandScheduler.getInstance().cancelAll()
 
@@ -89,12 +93,12 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         self.container.elevator.run_pid()
         self.container.wrist.run_pid()
 
-    
-        # self.Climbgal_L.__engageRatchet__()
-        # self.Climbgal_R.__engageRatchet__()
         if self.pxn_fightstick.getRawButtonPressed(1):
-            self.intake_timer.restart()
             self.coral_manipulator.intake()
+        if self.pxn_fightstick.getRawButtonPressed(2):
+            self.coral_manipulator.expel()
+        if self.pxn_fightstick.getRawButtonReleased(1) or self.pxn_fightstick.getRawButtonReleased(2):
+            self.coral_manipulator.stop()
         if self.pxn_fightstick.getRawButtonPressed(9):
             self.Climbgal_L.climb()
             self.Climbgal_R.climb()
@@ -102,9 +106,7 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
             self.Climbgal_L.reset()
             self.Climbgal_R.reset()
 
-        if self.intake_timer.hasElapsed(3):
-            self.coral_manipulator.stop()
-            self.intake_timer.stop()
+        
 
     def teleopExit(self):
         commands2.CommandScheduler.getInstance().cancelAll()

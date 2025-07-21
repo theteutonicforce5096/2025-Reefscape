@@ -28,9 +28,14 @@ class Coral_Manipulator:
 
     def intake(self):
         self.sucker.set(-0.25)
-        self.status = self.sucker.get()
-        print(f"Okay so the speed is set to {self.status}")
+        
+        
+    def expel(self):
+        self.sucker.set(.25)
+        # We might need to make this value higher because it might be too slow
+        
         
     def stop(self):
-        # print("Sanity Check 2")
+        print("Sanity Check 2")
         self.sucker.set(0)
+        
