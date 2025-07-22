@@ -4,7 +4,7 @@ from networktables import NetworkTables
 
 from robot_container import RobotContainer
 from subsystems import climb_mechanism
-from subsystems.coral_manipulator import Coral_Manipulator
+from subsystems.Coral_Manipulator import Coral_Manipulator
 
 class ReefscapeRobot(commands2.TimedCommandRobot):
     """

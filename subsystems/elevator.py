@@ -33,7 +33,7 @@ class Elevator(Subsystem):
             rev.SparkBase.PersistMode.kNoPersistParameters
         )
         
-        self.pid_controller = ProfiledPIDController(.1, 0, .001, TrapezoidProfile.Constraints(14, 16))
+        self.pid_controller = ProfiledPIDController(.1, 0, .001, TrapezoidProfile.Constraints(35, 16))
         self.feedforward = ElevatorFeedforward(0.2, 2, 0, 0)
                 
         self.setpoint = 0

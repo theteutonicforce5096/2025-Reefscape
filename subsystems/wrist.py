@@ -19,7 +19,7 @@ class Wrist(Subsystem):
             .voltageCompensation(12.0)
             .setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
             .smartCurrentLimit(20) # 20-40 recommended
-            .inverted(True) # inverted is CL, regular is CCL
+            .inverted(False) # inverted is CL, regular is CCL
         )
         
         self.motor_config_find_home = (
@@ -60,9 +60,9 @@ class Wrist(Subsystem):
             ),
             self.runOnce(lambda: self.reset_encoder()),
             self.runOnce(lambda: self.spin_motor(0)),
-            self.runOnce(lambda: self.set_setpoint(3))
+            self.runOnce(lambda: self.set_setpoint(-.5))
         ).schedule()
-        
+ 
     def reset_encoder(self):
         self.encoder.setPosition(0) 
 
@@ -79,11 +79,11 @@ class Wrist(Subsystem):
         
     def raise_setpoint(self):   # 28.2 rotations = 42 degrees above the horizontal
         if self.setpoint < 31:
-            self.setpoint += 1
+            self.setpoint += .5
         
     def lower_setpoint(self):
-        if self.setpoint >= 1:
-            self.setpoint -= 1
+        if self.setpoint >= .5:
+            self.setpoint -= .5
         
     # def get_encoder_value(self):
     #     return (self.encoder.getPosition())

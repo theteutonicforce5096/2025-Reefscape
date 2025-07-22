@@ -154,12 +154,12 @@ class RobotContainer:
             self.wrist.runOnce(lambda: self.wrist.set_setpoint(15))
         )
 
-        self.controller.rightBumper().whileTrue(
-            self.wrist.run(lambda: self.wrist.raise_setpoint())
+        self.controller.rightBumper().onTrue(
+            self.wrist.runOnce(lambda: self.wrist.raise_setpoint())
         )
 
-        self.controller.leftBumper().whileTrue(
-            self.wrist.run(lambda: self.wrist.lower_setpoint())
+        self.controller.leftBumper().onTrue(
+            self.wrist.runOnce(lambda: self.wrist.lower_setpoint())
         )
 
     
