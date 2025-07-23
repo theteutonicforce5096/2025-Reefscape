@@ -62,6 +62,14 @@ class Wrist(Subsystem):
             self.runOnce(lambda: self.spin_motor(0)),
             self.runOnce(lambda: self.set_setpoint(-.5))
         ).schedule()
+
+    def help_its_wrong(self):
+        SequentialCommandGroup(
+            self.runOnce(lambda: self.set_setpoint(-1)),
+            WaitCommand(0.2),
+            self.runOnce(lambda: self.reset_encoder()),
+            self.runOnce(lambda: self.set_setpoint(0))
+        ).schedule()
  
     def reset_encoder(self):
         self.encoder.setPosition(0) 

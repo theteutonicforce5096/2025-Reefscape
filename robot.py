@@ -84,6 +84,8 @@ class ReefscapeRobot(commands2.TimedCommandRobot):
         # self.Climbgal_L.reset()
         # self.Climbgal_R.reset()
 
+        self.container.elevator.set_setpoint(self.container.elevator.encoder.getPosition()) # needs profiled pid reset
+
     def teleopPeriodic(self):
         # self.container.elevator.run_pid()
         # self.container.wrist.run_pid()

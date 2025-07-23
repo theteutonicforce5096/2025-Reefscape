@@ -67,7 +67,7 @@ class RobotContainer:
         )
         
         # Set button binding for reseting field centric heading
-        (self.controller.leftBumper() & self.controller.rightBumper() & self.controller.a()).onTrue(
+        (self.controller.leftBumper() & self.controller.rightBumper()).onTrue(
             self.drivetrain.runOnce(lambda: self.drivetrain.seed_field_centric())
         )
 
@@ -120,38 +120,59 @@ class RobotContainer:
         # )
         
         self.elevator_controller.button(3).onTrue(
-            self.elevator.runOnce(lambda: self.elevator.set_setpoint(24.78))
+            self.elevator.runOnce(lambda: self.elevator.set_setpoint(14.56))
         )
         
         self.elevator_controller.button(4).onTrue(
-            self.elevator.runOnce(lambda: self.elevator.set_setpoint(57))
+            self.elevator.runOnce(lambda: self.elevator.set_setpoint(31.126))
         )
         
         self.elevator_controller.button(6).onTrue(
             self.elevator.runOnce(lambda: self.elevator.set_setpoint(95))
         )
 
-        self.controller.x().onTrue(
+        self.controller.leftTrigger().onTrue(
             self.elevator.runOnce(
                 lambda: print(self.wrist.encoder.getPosition(), self.wrist.setpoint)
             )
         )
+
+        self.controller.x().whileTrue(
+            self.wrist.run(lambda: self.wrist.set_setpoint(24))  # 32 is max
+        )
              
         self.controller.y().whileTrue(
-            self.wrist.run(lambda: self.wrist.set_setpoint(31))
+            self.wrist.run(lambda: self.wrist.set_setpoint(15))
         )
         
         self.controller.a().whileTrue(
             self.wrist.run(lambda: self.wrist.set_setpoint(0))
         )
+
+        self.controller.b().whileTrue(
+            self.wrist.run(lambda: self.wrist.set_setpoint(8))
+        )
+
+        self.elevator_controller.povLeft().whileTrue(
+            self.wrist.run(lambda: self.wrist.set_setpoint(24))  # 32 is max
+        )
+             
+        self.elevator_controller.povUp().whileTrue(
+            self.wrist.run(lambda: self.wrist.set_setpoint(15))
+        )
+        
+        self.elevator_controller.povDown().whileTrue(
+            self.wrist.run(lambda: self.wrist.set_setpoint(0))
+        )
+
+        self.elevator_controller.povRight().whileTrue(
+            self.wrist.run(lambda: self.wrist.set_setpoint(8))
+        )
+
         #Conflicting controls: Pressing 'a' also activated the intake/outtake motors
         
         self.controller.rightTrigger().onTrue(
-            self.wrist.runOnce(lambda: self.wrist.find_home())
-        )
-        
-        self.controller.leftTrigger().onTrue(
-            self.wrist.runOnce(lambda: self.wrist.set_setpoint(15))
+            self.wrist.runOnce(lambda: self.wrist.help_its_wrong())
         )
 
         self.controller.rightBumper().onTrue(
