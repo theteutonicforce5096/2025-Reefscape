@@ -375,15 +375,15 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
             operator_drive_request = (
                 self.slow_mode_field_centric_request.with_velocity_x(
                     self.straight_speed_limiter.calculate(
-                        -(forward_speed * abs(forward_speed * 0.5)) * self.max_linear_speed
+                        -(forward_speed * abs(forward_speed * 1)) * self.max_linear_speed
                     )
                 ).with_velocity_y(
                     self.strafe_speed_limiter.calculate(
-                        -(strafe_speed * abs(strafe_speed * 0.5)) * self.max_linear_speed
+                        -(strafe_speed * abs(strafe_speed * 1)) * self.max_linear_speed
                     )
                 ).with_rotational_rate(
                     self.rotation_speed_limiter.calculate(
-                        -(rotation_speed * abs(rotation_speed * 0.5)) * self.max_angular_rate
+                        -(rotation_speed * abs(rotation_speed * 1)) * self.max_angular_rate
                     )
                 )
             )
@@ -391,15 +391,15 @@ class SwerveDrive(Subsystem, swerve.SwerveDrivetrain):
             operator_drive_request = (
                 self.default_mode_field_centric_request.with_velocity_x(
                     self.straight_speed_limiter.calculate(
-                        -(forward_speed * abs(forward_speed)) * self.max_linear_speed
+                        -(forward_speed * abs(forward_speed * 0.25)) * self.max_linear_speed
                     )
                 ).with_velocity_y(
                     self.strafe_speed_limiter.calculate(
-                        -(strafe_speed * abs(strafe_speed)) * self.max_linear_speed
+                        -(strafe_speed * abs(strafe_speed * 0.25)) * self.max_linear_speed
                     )
                 ).with_rotational_rate(
                     self.rotation_speed_limiter.calculate(
-                        -(rotation_speed * abs(rotation_speed)) * self.max_angular_rate
+                        -(rotation_speed * abs(rotation_speed * 0.25)) * self.max_angular_rate
                     )
                 )
             )
